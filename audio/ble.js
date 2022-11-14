@@ -19,7 +19,6 @@ function connectionToggle() {
     } else {
         connect();
     }
-    //document.getElementById('terminal').focus();
 }
 
 // Sets button to either Connect or Disconnect
@@ -35,8 +34,6 @@ function connect() {
     if (!navigator.bluetooth) {
         console.log('WebBluetooth API is not available.\r\n' +
                     'Please make sure the Web Bluetooth flag is enabled.');
-        //window.term_.io.println('WebBluetooth API is not available on your browser.\r\n' +
-        //            'Please make sure the Web Bluetooth flag is enabled.');
         return;
     }
     console.log('Requesting Bluetooth Device...');
@@ -84,13 +81,12 @@ function connect() {
         txCharacteristic.addEventListener('characteristicvaluechanged',
                                           handleNotifications);
         connected = true;
-        //window.term_.io.println('\r\n' + bleDevice.name + ' Connected.');
+        console.log(bleDevice.name + ' Connected.');
         nusSendString('\r');
         setConnButtonState(true);
     })
     .catch(error => {
         console.log('' + error);
-        //window.term_.io.println('' + error);
         if(bleDevice && bleDevice.gatt.connected)
         {
             bleDevice.gatt.disconnect();
@@ -116,7 +112,7 @@ function disconnect() {
 
 function onDisconnected() {
     connected = false;
-    //window.term_.io.println('\r\n' + bleDevice.name + ' Disconnected.');
+    console.log(bleDevice.name + ' Disconnected.');
     setConnButtonState(false);
 }
 
@@ -129,7 +125,6 @@ function handleNotifications(event) {
         str += String.fromCharCode(value.getUint8(i));
     }
     console.log('notification: ' + str);
-    //window.term_.io.print(str);
 }
 
 function nusSendString(s) {
@@ -142,7 +137,7 @@ function nusSendString(s) {
         }
         sendNextChunk(val_arr);
     } else {
-        //window.term_.io.println('Not connected to a device yet.');
+        console.log('Not connected to a device yet.');
     }
 }
 
@@ -156,51 +151,6 @@ function sendNextChunk(a) {
       });
 }
 
-
-
-function initContent(io) {
-    io.println("\r\n\
-Welcome to Web Device CLI V0.1.0 (03/19/2019)\r\n\
-Copyright (C) 2019  makerdiary.\r\n\
-\r\n\
-This is a Web Command Line Interface via NUS (Nordic UART Service) using Web Bluetooth.\r\n\
-\r\n\
-  * Source: https://github.com/makerdiary/web-device-cli\r\n\
-  * Live:   https://makerdiary.github.io/web-device-cli\r\n\
-");
-}
-
-function setupHterm() {
-	/*
-    const term = new hterm.Terminal();
-
-    term.onTerminalReady = function() {
-        const io = this.io.push();
-        io.onVTKeystroke = (string) => {
-            nusSendString(string);
-        };
-        io.sendString = nusSendString;
-        initContent(io);
-        this.setCursorVisible(true);
-        this.keyboard.characterEncoding = 'raw';
-    };
-    term.decorate(document.querySelector('#terminal'));
-    term.installKeyboard();
-
-    term.contextMenu.setItems([
-        ['Terminal Reset', () => {term.reset(); initContent(window.term_.io);}],
-        ['Terminal Clear', () => {term.clearHome();}],
-        [hterm.ContextMenu.SEPARATOR],
-        ['GitHub', function() {
-            lib.f.openWindow('https://github.com/makerdiary/web-device-cli', '_blank');
-        }],
-    ]);
-
-    // Useful for console debugging.
-    window.term_ = term;
-	*/
-}
-
 window.onload = function() {
-    lib.init(setupHterm);
+    //lib.init(setupHterm);
 };

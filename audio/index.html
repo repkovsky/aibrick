@@ -27,6 +27,13 @@
 
 			return recognizer;
 		}
+		
+		function format_result(labels, values) {
+			var result = {}
+			for (let i = 0; i < labels.length; i++) {
+				result[labels[i]] = 100*values[i].toFixed(2)
+			}
+			return JSON.stringify(result)
 
 		async function init() {
 			//connectionToggle()
@@ -56,10 +63,12 @@
 					labelContainer.childNodes[i].innerHTML = classPrediction;
 					width = 200*result.scores[i].toFixed(2)
 					labelContainer.childNodes[i].style.width = width.toString() + "px";
+					
 				}
-				if (bleChar != "_"){
-					nusSendString(bleChar);
-				}
+				nusSendString(format_result(classLabels, result.scores));
+				//if (bleChar != "_"){
+				//	nusSendString(bleChar);
+				//}
 			}, {
 				includeSpectrogram: false, // in case listen should return result.spectrogram
 				probabilityThreshold: 0.0,
