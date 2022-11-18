@@ -5,29 +5,32 @@ const bleNusCharRXUUID   = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
 const bleNusCharTXUUID   = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 const MTU = 20;
 
+const State = {
+	BLE_connected: 'Push the hub button to start program',
+	Hub_connected: 'Hub connected, program running',
+	BLE_disconnected: 'Turn on the hub and click to connect'
+};
+const INIT = 'init'
+
 var bleDevice;
 var bleServer;
 var nusService;
 var rxCharacteristic;
 var txCharacteristic;
 
-var connected = false;
+var state = State.BLE_disconnected;
 
-function connectionToggle() {
+/* function connectionToggle() {
     if (connected) {
         disconnect();
     } else {
         connect();
     }
-}
+} */
 
 // Sets button to either Connect or Disconnect
-function setConnButtonState(enabled) {
-    if (enabled) {
-        document.getElementById("clientConnectButton").innerHTML = "Disconnect";
-    } else {
-        document.getElementById("clientConnectButton").innerHTML = "Connect";
-    }
+function setConnButtonState(new_state) {
+	document.getElementById("clientConnectButton").innerHTML = new_state;
 }
 
 function connect() {
@@ -80,10 +83,10 @@ function connect() {
         console.log('Notifications started');
         txCharacteristic.addEventListener('characteristicvaluechanged',
                                           handleNotifications);
-        connected = true;
+        state = State.BLE_connected;
         console.log(bleDevice.name + ' Connected.');
         nusSendString('\r');
-        setConnButtonState(true);
+        setConnButtonState(state);
     })
     .catch(error => {
         console.log('' + error);
@@ -102,8 +105,8 @@ function disconnect() {
     console.log('Disconnecting from Bluetooth Device...');
     if (bleDevice.gatt.connected) {
         bleDevice.gatt.disconnect();
-        connected = false;
-        setConnButtonState(false);
+        state = State.BLE_disconnected;
+        setConnButtonState(state);
         console.log('Bluetooth Device connected: ' + bleDevice.gatt.connected);
     } else {
         console.log('> Bluetooth Device is already disconnected');
@@ -111,9 +114,9 @@ function disconnect() {
 }
 
 function onDisconnected() {
-    connected = false;
+    state = State.BLE_disconnected;
     console.log(bleDevice.name + ' Disconnected.');
-    setConnButtonState(false);
+    setConnButtonState(state);
 }
 
 function handleNotifications(event) {
@@ -125,6 +128,9 @@ function handleNotifications(event) {
         str += String.fromCharCode(value.getUint8(i));
     }
     console.log('notification: ' + str);
+	if (str === INIT) {
+		state = State.Hub_connected;
+	}
 }
 
 function nusSendString(s) {
