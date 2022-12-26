@@ -6,11 +6,9 @@ const bleNusCharTXUUID   = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 const MTU = 20;
 
 const State = {
-	BLE_connected: 'Push the hub button to start program',
-	Hub_connected: 'Hub connected, program running',
-	BLE_disconnected: 'Turn on the hub and click to connect'
+	BLE_connected: 'Disconnect hub',
+	BLE_disconnected: 'Connect to hub'
 };
-const INIT = 'init'
 
 var bleDevice;
 var bleServer;
@@ -20,16 +18,17 @@ var txCharacteristic;
 
 var state = State.BLE_disconnected;
 
-/* function connectionToggle() {
-    if (connected) {
-        disconnect();
-    } else {
+function toggleConnection(){
+    if (state == State.BLE_disconnected){
         connect();
+    } else {
+        disconnect();
     }
-} */
+}
 
 // Sets button to either Connect or Disconnect
 function setConnButtonState(new_state) {
+    console.log(new_state)
 	document.getElementById("clientConnectButton").innerHTML = new_state;
 }
 
@@ -128,9 +127,6 @@ function handleNotifications(event) {
         str += String.fromCharCode(value.getUint8(i));
     }
     console.log('notification: ' + str);
-	if (str === INIT) {
-		state = State.Hub_connected;
-	}
 }
 
 function nusSendString(s) {
@@ -150,13 +146,14 @@ function nusSendString(s) {
 function sendNextChunk(a) {
     let chunk = a.slice(0, MTU);
     rxCharacteristic.writeValue(chunk)
-      .then(function() {
-          if (a.length > MTU) {
-              sendNextChunk(a.slice(MTU));
-          }
-      });
+        .catch(async () =>  {
+            console.log("DOMException: GATT operation already in progress.")
+            await Promise.resolve(resolve => setTimeout(resolve, 100));
+            rxCharacteristic.writeValue(chunk);
+        })
+        .then(function() {
+            if (a.length > MTU) {
+                sendNextChunk(a.slice(MTU));
+            }
+        });
 }
-
-window.onload = function() {
-    //lib.init(setupHterm);
-};
