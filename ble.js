@@ -1,8 +1,16 @@
 'use strict';
 
-const bleNusServiceUUID  = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-const bleNusCharRXUUID   = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
-const bleNusCharTXUUID   = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+/** Pybricks service UUID. */
+const pybricksServiceUUID = 'c5f50001-8280-46da-89f4-6d8051e4aeef';
+/** Device Information service UUID. */
+const deviceInformationServiceUUID = 0x180a;
+/** nRF UART Service UUID. */
+const nordicUartServiceUUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+/** nRF UART RX Characteristic UUID. Supports Write or Write without response. */
+const nordicUartRxCharUUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+/** nRF UART TX Characteristic UUID. Supports Notifications. */
+const nordicUartTxCharUUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+
 const MTU = 20;
 
 const State = {
@@ -40,9 +48,12 @@ function connect() {
     }
     console.log('Requesting Bluetooth Device...');
     navigator.bluetooth.requestDevice({
-        //filters: [{services: []}]
-        optionalServices: [bleNusServiceUUID],
-        acceptAllDevices: true
+        filters: [{ services: [pybricksServiceUUID] }],
+        optionalServices: [
+            pybricksServiceUUID,
+            deviceInformationServiceUUID,
+            nordicUartServiceUUID,
+        ],
     })
     .then(device => {
         bleDevice = device; 
@@ -53,14 +64,14 @@ function connect() {
     })
     .then(server => {
         console.log('Locate NUS service');
-        return server.getPrimaryService(bleNusServiceUUID);
+        return server.getPrimaryService(nordicUartServiceUUID);
     }).then(service => {
         nusService = service;
         console.log('Found NUS service: ' + service.uuid);
     })
     .then(() => {
         console.log('Locate RX characteristic');
-        return nusService.getCharacteristic(bleNusCharRXUUID);
+        return nusService.getCharacteristic(nordicUartRxCharUUID);
     })
     .then(characteristic => {
         rxCharacteristic = characteristic;
@@ -68,7 +79,7 @@ function connect() {
     })
     .then(() => {
         console.log('Locate TX characteristic');
-        return nusService.getCharacteristic(bleNusCharTXUUID);
+        return nusService.getCharacteristic(nordicUartTxCharUUID);
     })
     .then(characteristic => {
         txCharacteristic = characteristic;
