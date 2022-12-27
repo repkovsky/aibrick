@@ -6,21 +6,31 @@ from uselect import poll
 
 
 class BluetoothCommunication:
-    def __init__(self, callback):
+    def __init__(self, callback, model=''):
         self.buffer = ''
         self.callback = callback
         self.nuart = poll()
         self.nuart.register(stdin)
+        self.model = model
+
+    def _callback(self, command):
+        print(command)
+        if command == 'provide_model' and self.model:
+            print("model:" + self.model + '\n')
+        else:
+            self.callback(command)
     
     def poll(self):
-        if self.nuart.poll(0):        
-            self.buffer += stdin.read(1)
-            if self.buffer[-1] == '\n':
-                self.callback(self.buffer.strip())
+        if self.nuart.poll(0):
+            char = stdin.read(1)  
+            if char == '\n':
+                self._callback(self.buffer)
                 self.buffer = ''
+            else: 
+                self.buffer += char
+
 
 def execute(command):
-    print(command)
     if command == "left":
         drive_base.turn(-90, then=Stop.BRAKE, wait=False)
     elif command == "right":
@@ -30,14 +40,14 @@ def execute(command):
     elif command == "stop":
         drive_base.stop()
 
-# Configure the Drive Base and the Distance Sensor.
 drive_base = DriveBase(left_motor=Motor(Port.A, Direction.COUNTERCLOCKWISE),
                        right_motor=Motor(Port.B),
                        wheel_diameter=44,
                        axle_track=88)
 
 distance_sensor = UltrasonicSensor(Port.D)
-ble_communication = BluetoothCommunication(execute)
+MODEL = ''
+ble_communication = BluetoothCommunication(execute, MODEL)
 
 while True:
     ble_communication.poll()

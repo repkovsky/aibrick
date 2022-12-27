@@ -15,8 +15,11 @@ const MTU = 20;
 
 const State = {
 	BLE_connected: 'Disconnect hub',
+    BLE_model_setup: 'Setting up model...',
 	BLE_disconnected: 'Connect to hub'
 };
+
+const MODEL = 'model:'
 
 var bleDevice;
 var bleServer;
@@ -95,8 +98,14 @@ function connect() {
                                           handleNotifications);
         state = State.BLE_connected;
         console.log(bleDevice.name + ' Connected.');
-        nusSendString('\r');
+        nusSendString('provide_model\n');
         setConnButtonState(state);
+		setTimeout(() => {
+            console.log('Model loading timeout.');
+			if (!model_loaded){
+				model_init('')
+			}
+		}, 3000);
     })
     .catch(error => {
         console.log('' + error);
@@ -129,7 +138,7 @@ function onDisconnected() {
     setConnButtonState(state);
 }
 
-function handleNotifications(event) {
+async function handleNotifications(event) {
     let value = event.target.value;
     // Convert raw data bytes to character values and use these to 
     // construct a string.
@@ -138,6 +147,20 @@ function handleNotifications(event) {
         str += String.fromCharCode(value.getUint8(i));
     }
     console.log('notification: ' + str);
+    if (str.startsWith(MODEL) && !model_loaded){
+        state = State.BLE_model_setup
+        setConnButtonState(state)
+        model_url = str.slice(MODEL.length)
+    } else if (state == State.BLE_model_setup){
+        if (str.endsWith('\n')){
+            model_url += str.trim()
+            state = State.BLE_connected
+            setConnButtonState(state)
+            model_init(model_url);
+        } else {
+            model_url += str
+        }
+    }
 }
 
 function nusSendString(s) {

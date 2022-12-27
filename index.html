@@ -4,14 +4,27 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands"></script>
 	<script src="ble.js"></script>
 	<script type="text/javascript">
-		// more documentation available at
-		// https://github.com/tensorflow/tfjs-models/tree/master/speech-commands
+		// more documentation available at https://github.com/tensorflow/tfjs-models/tree/master/speech-commands
+		
+		var model_loaded = false;
+		var model_url = "";
 
-		async function createModel() {
-			const recognizer = speechCommands.create("BROWSER_FFT");
+		async function createModel(url="") {
+			if (url){
+				const checkpointURL = url + "model.json"; // model topology
+				const metadataURL = url + "metadata.json"; // model metadata
+				var recognizer = speechCommands.create(
+					"BROWSER_FFT", 
+					undefined,
+					checkpointURL,
+					metadataURL);
+			} else {
+				var recognizer = speechCommands.create("BROWSER_FFT");
+			}
 
 			// check that model and metadata are loaded via HTTPS requests.
 			await recognizer.ensureModelLoaded();
+			model_loaded = true;
 
 			return recognizer;
 		}
@@ -20,24 +33,25 @@
 			var best_label = ''
 			var best_value = 0
 			for (let i = 0; i < labels.length; i++) {
-				value = Math.round(100*values[i].toFixed(2))
-				if (value > best_value){
-					best_value = value
+				if (values[i] > best_value){
+					best_value = values[i]
 					best_label = labels[i]
 				}
 			}
 			return best_label + '\n'
 		}
 
-		async function init() {
-			const recognizer = await createModel();
-			const classLabels = recognizer.wordLabels(); // get class labels
+		async function model_init(url) {
+			model_url = url
+			const recognizer = await createModel(url);
+			const classLabels = recognizer.wordLabels();
 			const labelContainer = document.getElementById("label-container");
+			labelContainer.replaceChildren();
 			for (let i = 0; i < classLabels.length; i++) {
 				bar = document.createElement("div");
 				bar.id = classLabels[i];
 				bar.setAttribute("class", "bar");
-				bar.innerHTML = classLabels[i]
+				bar.innerHTML = classLabels[i];
 				labelContainer.appendChild(bar);
 			}
 
@@ -53,7 +67,7 @@
 						argmax = result.scores[i]
 					}
 					const classPrediction = classLabels[i] + ":&nbsp;" + result.scores[i].toFixed(2);
-					labelContainer.childNodes[i].innerHTML = classPrediction;
+					labelContainer.childNodes[i].innerHTML = classPrediction.replace(' ', '&nbsp;');
 					width = 200*result.scores[i].toFixed(2)
 					labelContainer.childNodes[i].style.width = width.toString() + "px";
 					
@@ -68,8 +82,6 @@
 				overlapFactor: 0.75 // probably want between 0.5 and 0.75. More info in README
 			});
 		}
-		
-		init();
 	</script>
 	<style>
 		body {
@@ -98,7 +110,7 @@
   </head>
   <body>
 	<div class="center">
-		<button id="clientConnectButton" type="button" onclick="toggleConnection()">Connect Bluetooth</button>
+		<button id="clientConnectButton" type="button" onclick="toggleConnection()">Connect to hub</button>
 	</div>
 	<div id="label-container" class="center"></div>
   </body>
