@@ -9,10 +9,46 @@
 		var model_loaded = false;
 		var model_url = "";
 
-		async function createModel(url="") {
+		function onConnected(){
+			console.log('onConnected');
+			nusSendString('provide_model\n');
+			setTimeout(() => {
+            console.log('Model loading timeout.');
+			if (!model_loaded){
+				model_init('')
+			}
+		}, 3000);
+		}
+
+		function onMsgReceived(str){
+			if (str.startsWith(MODEL) && !model_loaded){
+				state = State.BLE_model_setup
+				setConnButtonState(state)
+				model_url = str.slice(MODEL.length)
+			} else if (state == State.BLE_model_setup){
+				if (str.endsWith('\n')){
+					model_url += str.trim()
+					state = State.BLE_connected
+					setConnButtonState(state)
+					model_init(model_url);
+				} else {
+					model_url += str
+				}
+			}
+		}
+
+		function ble_init(){
+			bleOnConnected = onConnected;
+			bleOnMsgReceived = onMsgReceived;
+		}
+
+		async function createModel(url=""){
 			if (url){
 				const checkpointURL = url + "model.json"; // model topology
 				const metadataURL = url + "metadata.json"; // model metadata
+				// https://stackoverflow.com/questions/12460378/how-to-get-json-from-url-in-javascript
+				// metadata = await (await fetch(url)).json();
+
 				var recognizer = speechCommands.create(
 					"BROWSER_FFT", 
 					undefined,
@@ -40,40 +76,79 @@
 			}
 			return best_label + '\n'
 		}
+		
+		const colors = ['#0072bd', '#d95319', '#edb120', '#7e2f8e', '#77ac30', '#4dbeee', '#a2142f'];
+		const bg_colors = ['#e6f5ff', '#fceee8', '#fdf7e7', '#f7ecf9', '#f3f9eb', '#e8f6fd', '#fce8ec']
 
-		async function model_init(url) {
-			model_url = url
-			const recognizer = await createModel(url);
-			const classLabels = recognizer.wordLabels();
+		function createPredictionBars(classLabels){
 			const labelContainer = document.getElementById("label-container");
 			labelContainer.replaceChildren();
 			for (let i = 0; i < classLabels.length; i++) {
-				bar = document.createElement("div");
-				bar.id = classLabels[i];
-				bar.setAttribute("class", "bar");
-				bar.innerHTML = classLabels[i];
-				labelContainer.appendChild(bar);
+				var output = document.createElement("div");
+				output.className = "output";
+				var label = document.createElement("div");
+				label.className = "label";
+				label.style.color = colors[i % 7]
+				label.innerHTML = classLabels[i];
+				var progress = document.createElement("div");
+				progress.className = "progress";
+				progress.style.backgroundColor = bg_colors[i % 7]
+				var bar = document.createElement("div");
+				bar.id = "__" + classLabels[i];
+				bar.className = "bar";
+				bar.style.backgroundColor = colors[i % 7]
+				output.appendChild(label);
+				output.appendChild(progress);
+				progress.appendChild(bar);
+				labelContainer.appendChild(output);
 			}
+		}
+
+		function updatePredictionBars(classLabels, scores){
+			for (let i = 0; i < classLabels.length; i++) {
+				const classPrediction = Math.round(scores[i]*100);
+				bar = document.getElementById("__" + classLabels[i]);
+				bar.innerHTML = "&nbsp;" + classPrediction + "%&nbsp;";
+				bar.style.width = classPrediction;
+			}
+		}
+
+		async function model_type(url){
+			if (url){
+				const metadata = await (await fetch(url + "metadata.json")).json();
+				if (metadata.hasOwnProperty('tfjsSpeechCommandsVersion')){
+					return 'audio';
+				} else if (metadata.hasOwnProperty('tmVersion')){
+					return 'image';
+				} else {
+					return undefined
+				}
+			} else {
+				return 'audio';
+			}
+		}
+
+		async function model_init(url) {
+			model_url = url
+			
+			const recognizer = await createModel(url);
+			const classLabels = recognizer.wordLabels();
+			createPredictionBars(classLabels);
 
 			// listen() takes two arguments:
 			// 1. A callback function that is invoked anytime a word is recognized.
 			// 2. A configuration object with adjustable fields
 			recognizer.listen(result => {
-				const scores = result.scores; // probability of prediction for each class
-				// render the probability scores per class
+				const scores = result.scores; 
+				updatePredictionBars(classLabels, scores);
 				argmax = 0
 				for (let i = 0; i < classLabels.length; i++) {
-					if (argmax < result.scores[i] && !classLabels[i].startsWith('_')){
-						argmax = result.scores[i]
+					if (argmax < scores[i] && !classLabels[i].startsWith('_')){
+						argmax = scores[i]
 					}
-					const classPrediction = classLabels[i] + ":&nbsp;" + result.scores[i].toFixed(2);
-					labelContainer.childNodes[i].innerHTML = classPrediction.replace(' ', '&nbsp;');
-					width = 200*result.scores[i].toFixed(2)
-					labelContainer.childNodes[i].style.width = width.toString() + "px";
-					
 				}
 				if (argmax > 0.75){
-					nusSendString(get_best_prediction(classLabels, result.scores));
+					nusSendString(get_best_prediction(classLabels, scores));
 				}
 			}, {
 				includeSpectrogram: false, // in case listen should return result.spectrogram
@@ -82,36 +157,26 @@
 				overlapFactor: 0.75 // probably want between 0.5 and 0.75. More info in README
 			});
 		}
+
+		//ble_init();
+		model_init('');
+		var t = model_type('https://storage.googleapis.com/tm-model/w6XfqRk9P/');
+		console.log(t);
+		t = model_type('https://storage.googleapis.com/tm-model/QFoA4PIqt/');
+		console.log(t);
 	</script>
-	<style>
-		body {
-			font-family: 'Barlow', sans-serif;
-		}
-		.bar {
-			font-size: 10px;
-			border-radius: 5px;
-			border: 1px solid blue;
-			padding: 2px;
-			margin: 2px;		
-			width: 200px;
-			background-color: lightblue;
-		}
-		.center {
-			margin: auto;
-			width: 210px;
-			padding: 10px;
-		}
-		#clientConnectButton {
-			width: 200px;
-		}
-	</style>
-	<title>Pybricks AI command recognition</title>
+	<link rel="stylesheet" href="styles.css">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<title>AI-Brick</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
 	<div class="center">
-		<button id="clientConnectButton" type="button" onclick="toggleConnection()">Connect to hub</button>
+		<div class="title"><img src="ai-brick.png"><span id="app-name">AI-Brick</span></div>
+		<div style="text-align: center;">
+			<button id="clientConnectButton" role="button" onclick="toggleConnection()"><i class="material-icons" style="font-size:11px">bluetooth</i> Connect to hub</button>
+		</div>
+		<div id="label-container"></div>
 	</div>
-	<div id="label-container" class="center"></div>
   </body>
 </html>

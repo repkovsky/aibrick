@@ -26,6 +26,9 @@ var bleServer;
 var nusService;
 var rxCharacteristic;
 var txCharacteristic;
+var bleOnConnected = null
+var bleOnMsgReceived = null
+var bleOnDisconnected = null
 
 var state = State.BLE_disconnected;
 
@@ -97,20 +100,17 @@ function connect() {
         txCharacteristic.addEventListener('characteristicvaluechanged',
                                           handleNotifications);
         state = State.BLE_connected;
-        console.log(bleDevice.name + ' Connected.');
-        nusSendString('provide_model\n');
         setConnButtonState(state);
-		setTimeout(() => {
-            console.log('Model loading timeout.');
-			if (!model_loaded){
-				model_init('')
-			}
-		}, 3000);
+        console.log(bleDevice.name + ' Connected.');
+        if (bleOnConnected){
+            bleOnConnected();
+        } else {
+            console.log(bleOnConnected)
+        }
     })
     .catch(error => {
         console.log('' + error);
-        if(bleDevice && bleDevice.gatt.connected)
-        {
+        if(bleDevice && bleDevice.gatt.connected){
             bleDevice.gatt.disconnect();
         }
     });
@@ -124,8 +124,6 @@ function disconnect() {
     console.log('Disconnecting from Bluetooth Device...');
     if (bleDevice.gatt.connected) {
         bleDevice.gatt.disconnect();
-        state = State.BLE_disconnected;
-        setConnButtonState(state);
         console.log('Bluetooth Device connected: ' + bleDevice.gatt.connected);
     } else {
         console.log('> Bluetooth Device is already disconnected');
@@ -136,6 +134,11 @@ function onDisconnected() {
     state = State.BLE_disconnected;
     console.log(bleDevice.name + ' Disconnected.');
     setConnButtonState(state);
+    if (bleOnDisconnected){
+        bleOnDisconnected();
+    } else {
+        console.log(bleOnDisconnected)
+    }
 }
 
 async function handleNotifications(event) {
@@ -147,19 +150,8 @@ async function handleNotifications(event) {
         str += String.fromCharCode(value.getUint8(i));
     }
     console.log('notification: ' + str);
-    if (str.startsWith(MODEL) && !model_loaded){
-        state = State.BLE_model_setup
-        setConnButtonState(state)
-        model_url = str.slice(MODEL.length)
-    } else if (state == State.BLE_model_setup){
-        if (str.endsWith('\n')){
-            model_url += str.trim()
-            state = State.BLE_connected
-            setConnButtonState(state)
-            model_init(model_url);
-        } else {
-            model_url += str
-        }
+    if (bleOnMsgReceived){
+        bleOnMsgReceived(str);
     }
 }
 

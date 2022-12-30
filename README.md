@@ -14,3 +14,10 @@ Code was tested on Mindstorms Robot Builder Hub and Tricky model.
 3. Open https://repkovsky.github.io/lego-ai in browser (works in Chrome) and allow access to microphone. Displayed bars correspond to words which can be detected by default model `18w` of `speech-commands.js` library. The length of bar corresponds to estimated probability of each word. If the probability exceeds `0.75`, the word will be sent to hub over Bluetooth Nordic UART interface. The script in the Hub will send it back to browser to show that communation is working properly (you can observe it by pressing F12 and going to Console tab).
 4. Click 'Connect to hub', choose the proper Lego hub and click 'Pair'.
 5. In the console of Pybricks code you should see appearing words recognized by algorithm running in browser. If the word is 'left', 'right', 'go' or 'stop', the corresponding move should be executed.
+
+## Custom AI model
+
+You can prepared and use your own speech recognition model with  https://teachablemachine.withgoogle.com/train/audio. After recording audio samples and training, click "Export Model" and in the tab "Tensorflow.js" choose option "Upload (shareable link)" and click "Upload my model". Below you will find the shareable link woth you speech recognition model. To use it with Lego hub, initialize  `BluetoothCommunication` class 
+
+ enables 
+
