@@ -13,38 +13,14 @@ const nordicUartTxCharUUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 
 const MTU = 20;
 
-const State = {
-	BLE_connected: 'Disconnect hub',
-    BLE_model_setup: 'Setting up model...',
-	BLE_disconnected: 'Connect to hub'
-};
-
-const MODEL = 'model:'
-
 var bleDevice;
 var bleServer;
 var nusService;
 var rxCharacteristic;
 var txCharacteristic;
-var bleOnConnected = null
-var bleOnMsgReceived = null
-var bleOnDisconnected = null
-
-var state = State.BLE_disconnected;
-
-function toggleConnection(){
-    if (state == State.BLE_disconnected){
-        connect();
-    } else {
-        disconnect();
-    }
-}
-
-// Sets button to either Connect or Disconnect
-function setConnButtonState(new_state) {
-    console.log(new_state)
-	document.getElementById("clientConnectButton").innerHTML = new_state;
-}
+var bleOnConnected = null;
+var bleOnMsgReceived = null;
+var bleOnDisconnected = null;
 
 function connect() {
     if (!navigator.bluetooth) {
@@ -65,7 +41,7 @@ function connect() {
         bleDevice = device; 
         console.log('Found ' + device.name);
         console.log('Connecting to GATT Server...');
-        bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+        bleDevice.addEventListener('gattserverdisconnected', onDisconnectedHandler);
         return device.gatt.connect();
     })
     .then(server => {
@@ -99,8 +75,6 @@ function connect() {
         console.log('Notifications started');
         txCharacteristic.addEventListener('characteristicvaluechanged',
                                           handleNotifications);
-        state = State.BLE_connected;
-        setConnButtonState(state);
         console.log(bleDevice.name + ' Connected.');
         if (bleOnConnected){
             bleOnConnected();
@@ -130,14 +104,10 @@ function disconnect() {
     }
 }
 
-function onDisconnected() {
-    state = State.BLE_disconnected;
+function onDisconnectedHandler() {
     console.log(bleDevice.name + ' Disconnected.');
-    setConnButtonState(state);
     if (bleOnDisconnected){
         bleOnDisconnected();
-    } else {
-        console.log(bleOnDisconnected)
     }
 }
 

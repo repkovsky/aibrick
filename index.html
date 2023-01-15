@@ -2,181 +2,44 @@
   <head>
 	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 	<script src="ble.js"></script>
-	<script type="text/javascript">
-		// more documentation available at https://github.com/tensorflow/tfjs-models/tree/master/speech-commands
-		
-		var model_loaded = false;
-		var model_url = "";
-
-		function onConnected(){
-			console.log('onConnected');
-			nusSendString('provide_model\n');
-			setTimeout(() => {
-            console.log('Model loading timeout.');
-			if (!model_loaded){
-				model_init('')
-			}
-		}, 3000);
-		}
-
-		function onMsgReceived(str){
-			if (str.startsWith(MODEL) && !model_loaded){
-				state = State.BLE_model_setup
-				setConnButtonState(state)
-				model_url = str.slice(MODEL.length)
-			} else if (state == State.BLE_model_setup){
-				if (str.endsWith('\n')){
-					model_url += str.trim()
-					state = State.BLE_connected
-					setConnButtonState(state)
-					model_init(model_url);
-				} else {
-					model_url += str
-				}
-			}
-		}
-
-		function ble_init(){
-			bleOnConnected = onConnected;
-			bleOnMsgReceived = onMsgReceived;
-		}
-
-		async function createModel(url=""){
-			if (url){
-				const checkpointURL = url + "model.json"; // model topology
-				const metadataURL = url + "metadata.json"; // model metadata
-				// https://stackoverflow.com/questions/12460378/how-to-get-json-from-url-in-javascript
-				// metadata = await (await fetch(url)).json();
-
-				var recognizer = speechCommands.create(
-					"BROWSER_FFT", 
-					undefined,
-					checkpointURL,
-					metadataURL);
-			} else {
-				var recognizer = speechCommands.create("BROWSER_FFT");
-			}
-
-			// check that model and metadata are loaded via HTTPS requests.
-			await recognizer.ensureModelLoaded();
-			model_loaded = true;
-
-			return recognizer;
-		}
-		
-		function get_best_prediction(labels, values){
-			var best_label = ''
-			var best_value = 0
-			for (let i = 0; i < labels.length; i++) {
-				if (values[i] > best_value){
-					best_value = values[i]
-					best_label = labels[i]
-				}
-			}
-			return best_label + '\n'
-		}
-		
-		const colors = ['#0072bd', '#d95319', '#edb120', '#7e2f8e', '#77ac30', '#4dbeee', '#a2142f'];
-		const bg_colors = ['#e6f5ff', '#fceee8', '#fdf7e7', '#f7ecf9', '#f3f9eb', '#e8f6fd', '#fce8ec']
-
-		function createPredictionBars(classLabels){
-			const labelContainer = document.getElementById("label-container");
-			labelContainer.replaceChildren();
-			for (let i = 0; i < classLabels.length; i++) {
-				var output = document.createElement("div");
-				output.className = "output";
-				var label = document.createElement("div");
-				label.className = "label";
-				label.style.color = colors[i % 7]
-				label.innerHTML = classLabels[i];
-				var progress = document.createElement("div");
-				progress.className = "progress";
-				progress.style.backgroundColor = bg_colors[i % 7]
-				var bar = document.createElement("div");
-				bar.id = "__" + classLabels[i];
-				bar.className = "bar";
-				bar.style.backgroundColor = colors[i % 7]
-				output.appendChild(label);
-				output.appendChild(progress);
-				progress.appendChild(bar);
-				labelContainer.appendChild(output);
-			}
-		}
-
-		function updatePredictionBars(classLabels, scores){
-			for (let i = 0; i < classLabels.length; i++) {
-				const classPrediction = Math.round(scores[i]*100);
-				bar = document.getElementById("__" + classLabels[i]);
-				bar.innerHTML = "&nbsp;" + classPrediction + "%&nbsp;";
-				bar.style.width = classPrediction;
-			}
-		}
-
-		async function model_type(url){
-			if (url){
-				const metadata = await (await fetch(url + "metadata.json")).json();
-				if (metadata.hasOwnProperty('tfjsSpeechCommandsVersion')){
-					return 'audio';
-				} else if (metadata.hasOwnProperty('tmVersion')){
-					return 'image';
-				} else {
-					return undefined
-				}
-			} else {
-				return 'audio';
-			}
-		}
-
-		async function model_init(url) {
-			model_url = url
-			
-			const recognizer = await createModel(url);
-			const classLabels = recognizer.wordLabels();
-			createPredictionBars(classLabels);
-
-			// listen() takes two arguments:
-			// 1. A callback function that is invoked anytime a word is recognized.
-			// 2. A configuration object with adjustable fields
-			recognizer.listen(result => {
-				const scores = result.scores; 
-				updatePredictionBars(classLabels, scores);
-				argmax = 0
-				for (let i = 0; i < classLabels.length; i++) {
-					if (argmax < scores[i] && !classLabels[i].startsWith('_')){
-						argmax = scores[i]
-					}
-				}
-				if (argmax > 0.75){
-					nusSendString(get_best_prediction(classLabels, scores));
-				}
-			}, {
-				includeSpectrogram: false, // in case listen should return result.spectrogram
-				probabilityThreshold: 0.0,
-				invokeCallbackOnNoiseAndUnknown: true,
-				overlapFactor: 0.75 // probably want between 0.5 and 0.75. More info in README
-			});
-		}
-
-		//ble_init();
-		model_init('');
-		var t = model_type('https://storage.googleapis.com/tm-model/w6XfqRk9P/');
-		console.log(t);
-		t = model_type('https://storage.googleapis.com/tm-model/QFoA4PIqt/');
-		console.log(t);
-	</script>
+	<script src="models.js"></script>
+	<script src="connection.js"></script>
+	<script src="interface.js"></script>
 	<link rel="stylesheet" href="styles.css">
-	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<title>AI-Brick</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
-	<div class="center">
-		<div class="title"><img src="ai-brick.png"><span id="app-name">AI-Brick</span></div>
-		<div style="text-align: center;">
-			<button id="clientConnectButton" role="button" onclick="toggleConnection()"><i class="material-icons" style="font-size:11px">bluetooth</i> Connect to hub</button>
+	<div class="app">
+		<div class="title"><img src="ai-brick.png"><div id="app-name">AI-Brick</div></div>
+		<div class="button-container">
+			<button id="clientConnectButton" role="button" onclick="toggleConnection()">Connect to hub</button>
+		</div>
+		
+		<div id="webcam-container"></div>
+		<!--<div id="webcam-overlay">
+			<img id="rotate" src="rotate.png" onclick="toggleWebcam()">
+		</div>-->
+		<div id="audio-visualizer">
+			<div style="position: relative;">
+				<span></span>
+				<span></span>
+				<span></span>
+				<span></span>
+				<span></span>
+			</div>
 		</div>
 		<div id="label-container"></div>
+		<div class="footnote">
+			<a href="https://repkovsky.github.io/ai-brick">About the project</a>
+		</div>
 	</div>
+	<script type="text/javascript">
+		//connectionInit();
+		modelInit('');
+		//modelInit('https://teachablemachine.withgoogle.com/models/w6XfqRk9P/');
+	</script>
   </body>
 </html>
