@@ -144,8 +144,12 @@ function sendNextChunk(a) {
     rxCharacteristic.writeValue(chunk)
         .catch(async () =>  {
             console.log("DOMException: GATT operation already in progress.")
-            await Promise.resolve(resolve => setTimeout(resolve, 100));
-            rxCharacteristic.writeValue(chunk);
+            Promise.resolve()
+                .then(() => new Promise(resolve => setTimeout(resolve, 300)))
+                .then(() => { 
+                    console.log('Delayed.');
+                    rxCharacteristic.writeValue(chunk);
+                });
         })
         .then(function() {
             if (a.length > MTU) {
