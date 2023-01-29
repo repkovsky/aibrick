@@ -8,7 +8,7 @@ const State = {
 };
 
 var state = State.NOT_CONNECTED;
-var label_counter = 0;
+var notifications = false;
 
 function connectionInit(){
     bleOnConnected = onConnected;
@@ -28,13 +28,13 @@ function sendMessage(msg){
 
 function sendLabelsToHub(){
 	console.log('sendLabelsToHub')
-	state = State.LABELS;
-	label_counter = 0;
-	sendMessage(model_labels[label_counter++]);
+	msg = '!labels=' + model_labels.join('\t')
+	console.log(msg);
+	sendMessage(msg);
 }
 
 function sendNotificationToHub(label){
-	if (state == State.NOTIFICATION){
+	if (notifications){
 		sendMessage(label);
 	}
 }
@@ -43,7 +43,7 @@ function sendNotificationToHub(label){
 function onConnected(){
 	state = State.SETUP;
     setConnButtonState(state);
-	sendMessage('setup?');
+	sendMessage('?setup');
 	setTimeout(() => {
 		console.log('Model loading timeout.');
 		if (!model_loaded){
@@ -52,6 +52,13 @@ function onConnected(){
 	}, 5000);
 }
 
+const Command = {
+    MODEL: 'model',
+    NOTIFY: 'notify',
+    LABELS: 'labels',
+	PROBABILITY: 'P'
+};
+
 var buffer = '';
 function onMsgReceived(msg){
 	console.log(msg)
@@ -59,32 +66,42 @@ function onMsgReceived(msg){
 	if (buffer.endsWith('\n')){
 		msg = buffer.trim();
 		buffer = '';
-		switch (state){
-			case State.SETUP:
-				const MODEL = 'model=';
-				if (msg.startsWith(MODEL)){
-					modelInit(msg.slice(MODEL));
-					setConnButtonState(state);
+		msg_type = msg[0];
+		msg = msg.slice(1);
+		switch (msg_type){
+			case '!':
+				idx = msg.indexOf("=");
+				const command = msg.slice(0, idx);
+				const value = msg.slice(idx+1);
+				console.log('command=' + command)
+				console.log('value=' + value)
+				switch (command){
+					case Command.MODEL:
+						modelInit(value);
+						setConnButtonState(state);
+						break;
+					case Command.NOTIFY:
+						notifications = (value === 'true')
+						break;
 				}
 				break;
-			case State.LABELS:
-				if (msg == 'ack'){
-					if (label_counter < model_labels.length) {
-						sendMessage(model_labels[label_counter++])
-					} else {
-						sendMessage('');
-						// communication = Communication.COM_active;
-						state = State.NOTIFICATION;
-					}
-				}
-				break;
-			case State.NOTIFICATION:
-				if (msg == 'prob?'){
-					prob = '';
-					for (let i = 0; i < model_scores.length; i++){
-						prob += String.fromCharCode(Math.round(100*model_scores[i]) + ' '.charCodeAt(0))
-					}
-					sendMessage(prob);
+			case '?':
+				switch (msg){
+					// case Command.LABELS:
+					// 	if (label_counter < model_labels.length) {
+					// 		sendMessage(model_labels[label_counter++])
+					// 	} else {
+					// 		label_counter = 0;
+					// 		sendMessage('');
+					// 	}
+					// 	break;
+					case Command.PROBABILITY:
+						let response = '';
+						for (let i = 0; i < model_scores.length; i++) {
+							response += String.fromCharCode(Math.round(100*model_scores[i]) + ' '.charCodeAt(0))
+						}
+						sendMessage(response);
+						break;
 				}
 				break;
 		}

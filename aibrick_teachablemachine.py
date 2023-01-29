@@ -3,63 +3,54 @@ from pybricks.parameters import Color
 from usys import stdin
 from uselect import poll
 
-class AIBrickState:
-    SETUP = 1
-    LABELS = 2
-    NOTIFICATION = 3
-    PROBABILITY = 4
 
 class AIBrickTeachableMachine:
-    def __init__(self, model='', onnotification=lambda x: None):
+    def __init__(self, model='', onnotification=None):
         self.model = model
         self.onnotification = onnotification
         self.buffer = ''
         self.nuart = poll()
         self.nuart.register(stdin)
-        self.state = AIBrickState.SETUP
+        self._labels = []
 
     def _send(self, message):
         print(message + '\n')
 
-    def setup():
-        while self.state in (AIBrickState.SETUP, AIBrickState.LABELS):
-            self.poll()
+    def _request(self, message):
+        self.poll()
+        self._send(message)
+        response = None
+        while response is None:
+            response = self._receive()
+        return response
 
     def get_probabilities():
-        self.poll()
-        self._send('prob?')
-        self.state = AIBrickState.PROBABILITY
-        while self.state == AIBrickState.PROBABILITY:
-            self.poll()
-        return self.probabilities
+        return {label: (byte - '_')/100 for label, byte in zip(self._labels, self._request('?P'))}
 
     def _process(self, message):
-        if self.state == AIBrickState.SETUP and message == 'setup?':
-            self._send('model=' + self.model)
-            self.labels = []
-            self.state = AIBrickState.LABELS
-        elif self.state == AIBrickState.LABELS:
-            if message != '':
-                self.labels.append(message)
-                self._send("ack")
-            else:
-                self.state = AIBrickState.NOTIFICATION
-        elif self.state == AIBrickState.NOTIFICATION:
+        if message == '?setup':
+            self._send('!model=' + self.model)
+        elif message.startswith('!labels'):
+            self._labels = message.split('=')[1].split('\t')
+            self._send('!notify=' + str(callable(self.onnotification)).lower())
+        else:
             self.onnotification(message)
-        elif self.state == AIBrickState.PROBABILITY:
-            self.probabilities = {label: (byte - '_')/100
-                                  for label, byte in zip(self._labels, message)}
-            self.state = AIBrickState.NOTIFICATION
     
-    def poll(self):
+    def _receive(self):
         while self.nuart.poll(0):
             char = stdin.read(1)  
             if char == '\n':
-                self._process(self.buffer)
-                self.buffer = ''
-                break
+                result, self.buffer = self.buffer, ''
+                return result
             else: 
                 self.buffer += char
+        return None
+
+    def poll(self):
+        result = self._receive()
+        if result is not None:
+            self._process(result)
+        
 
 
 def OnNotification(command):

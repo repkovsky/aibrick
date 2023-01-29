@@ -157,3 +157,42 @@ function sendNextChunk(a) {
             }
         });
 }
+
+class BufferedNUS {
+
+    constructor(bleDevice, rxCharacteristic) {
+        this.bleDevice = bleDevice;
+        this.rxCharacteristic = rxCharacteristic;
+        this.buffer = new Array(0);
+        this.busy = false;
+    }
+  
+    pushString(s) {
+        if(this.bleDevice && this.bleDevice.gatt.connected) {
+            console.log("push: " + s);
+            for (let i = 0; i < s.length; i++) {
+                this.buffer.push(s[i].charCodeAt(0));
+            }
+            if (!this.busy){
+                this.sendBuffer();
+            }
+        }
+    }
+
+    sendBuffer() {
+        this.busy = true;
+        let chunk = new Uint8Array(this.buffer.slice(0, MTU));
+        this.buffer = this.buffer.slice(MTU);
+        this.rxCharacteristic.writeValue(chunk)
+            .catch(async () =>  {
+                console.log("DOMException: GATT operation already in progress.")
+            })
+            .then(function() {
+                if (this.buffer.length > 0) {
+                    this.sendBuffer();
+                } else {
+                    this.busy = false;
+                }
+            });
+    }
+}
