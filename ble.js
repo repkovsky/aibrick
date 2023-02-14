@@ -18,11 +18,15 @@ var bleServer;
 var nusService;
 var rxCharacteristic;
 var txCharacteristic;
-var bleOnConnected = null;
-var bleOnMsgReceived = null;
-var bleOnDisconnected = null;
+// var bleOnConnected = null;
+// var bleOnMsgReceived = null;
+// var bleOnDisconnected = null;
 
-function connect() {
+// bleOnConnected = connection.onConnected;
+// bleOnMsgReceived = this.onMsgReceived;
+// bleOnDisconnected = this.onDisconnected;
+
+function connect(connection) {
     if (!navigator.bluetooth) {
         console.log('WebBluetooth API is not available.\r\n' +
                     'Please make sure the Web Bluetooth flag is enabled.');
@@ -41,7 +45,7 @@ function connect() {
         bleDevice = device; 
         console.log('Found ' + device.name);
         console.log('Connecting to GATT Server...');
-        bleDevice.addEventListener('gattserverdisconnected', onDisconnectedHandler);
+        bleDevice.addEventListener('gattserverdisconnected', connection.onDisconnected);
         return device.gatt.connect();
     })
     .then(server => {
@@ -57,6 +61,7 @@ function connect() {
     })
     .then(characteristic => {
         rxCharacteristic = characteristic;
+        connection.setTxBuffer(bleDevice, rxCharacteristic);
         console.log('Found RX characteristic');
     })
     .then(() => {
@@ -73,14 +78,14 @@ function connect() {
     })
     .then(() => {
         console.log('Notifications started');
+        // txCharacteristic.addEventListener('characteristicvaluechanged',
+        //                                   handleNotifications);
         txCharacteristic.addEventListener('characteristicvaluechanged',
-                                          handleNotifications);
+                                          connection.onMsgReceived);
+
+                                          
         console.log(bleDevice.name + ' Connected.');
-        if (bleOnConnected){
-            bleOnConnected();
-        } else {
-            console.log(bleOnConnected)
-        }
+        connection.onConnected()
     })
     .catch(error => {
         console.log('' + error);
@@ -104,26 +109,26 @@ function disconnect() {
     }
 }
 
-function onDisconnectedHandler() {
-    console.log(bleDevice.name + ' Disconnected.');
-    if (bleOnDisconnected){
-        bleOnDisconnected();
-    }
-}
+// function onDisconnectedHandler() {
+//     console.log(bleDevice.name + ' Disconnected.');
+//     if (bleOnDisconnected){
+//         bleOnDisconnected();
+//     }
+// }
 
-async function handleNotifications(event) {
-    let value = event.target.value;
-    // Convert raw data bytes to character values and use these to 
-    // construct a string.
-    let str = "";
-    for (let i = 0; i < value.byteLength; i++) {
-        str += String.fromCharCode(value.getUint8(i));
-    }
-    console.log('notification: ' + str);
-    if (bleOnMsgReceived){
-        bleOnMsgReceived(str);
-    }
-}
+// async function handleNotifications(event) {
+//     let value = event.target.value;
+//     // Convert raw data bytes to character values and use these to 
+//     // construct a string.
+//     let str = "";
+//     for (let i = 0; i < value.byteLength; i++) {
+//         str += String.fromCharCode(value.getUint8(i));
+//     }
+//     console.log('notification: ' + str);
+//     if (bleOnMsgReceived){
+//         bleOnMsgReceived(str);
+//     }
+// }
 
 function nusSendString(s) {
     if(bleDevice && bleDevice.gatt.connected) {
@@ -165,6 +170,7 @@ class BufferedNUS {
         this.rxCharacteristic = rxCharacteristic;
         this.buffer = new Array(0);
         this.busy = false;
+        console.log("BufferedNUS ready")
     }
   
     pushString(s) {
@@ -182,12 +188,12 @@ class BufferedNUS {
     sendBuffer() {
         this.busy = true;
         let chunk = new Uint8Array(this.buffer.slice(0, MTU));
-        this.buffer = this.buffer.slice(MTU);
+        this.buffer.splice(0, MTU);
         this.rxCharacteristic.writeValue(chunk)
-            .catch(async () =>  {
+            .catch(async () => {
                 console.log("DOMException: GATT operation already in progress.")
             })
-            .then(function() {
+            .then(() => {
                 if (this.buffer.length > 0) {
                     this.sendBuffer();
                 } else {

@@ -4,52 +4,87 @@ from usys import stdin
 from uselect import poll
 
 
+# class AIBrick:
+#     def __init__(self):
+#         self.buffer = ''
+#         self.nuart = poll()
+#         self.nuart.register(stdin)
+
+#     def _send(self, cmd, value):
+        # print(cmd, '\t', value, '\n', sep=None)
+
+#     def _process(self, message):
+#         pass
+    
+#     def receive(self):
+#         while self.nuart.poll(0):
+#             char = stdin.read(1)  
+#             if char == '\n':
+#                 message, self.buffer = self.buffer, ''
+#                 self._process(message)
+#             else: 
+#                 self.buffer += char
+
+
+# class AIBrickTeachableMachine(AIBrick):
+#     def __init__(self, model='', ondetection=None, use_probabilities=False):
+#         super().__init__()
+#         self.model = model
+#         self.ondetection = ondetection
+#         self.use_probabilities = use_probabilities
+#         self._labels = []
+#         self.probability = dict()
+
+#     def _process(self, message):
+#         if '\t' in message:
+#             cmd, value = message.split('\t')
+#             if cmd == 'setup':
+#                 self._send('model', self.model)
+#             elif cmd == 'labels':
+#                 self._labels = value.split(' ')
+#                 self._send('notify', str(callable(self.ondetection)).lower())
+#             elif cmd == 'P':
+#                 self.probability = {label: (encoded_byte - '_')/100 
+#                                      for label, encoded_byte in zip(self._labels, value)}
+#         else:
+#             self.ondetection(message)
+
+
 class AIBrickTeachableMachine:
-    def __init__(self, model='', onnotification=None):
+    def __init__(self, model='', ondetection=None, use_probabilities=False):
         self.model = model
-        self.onnotification = onnotification
+        self.ondetection = ondetection
+        self.use_probabilities = use_probabilities
         self.buffer = ''
         self.nuart = poll()
         self.nuart.register(stdin)
-        self._labels = []
+        self.labels = []
 
-    def _send(self, message):
-        print(message + '\n')
+    def _send(self, command, message):
+        print(command, '\t', message, '\n', sep=None)
 
-    def _request(self, message):
-        self.poll()
-        self._send(message)
-        response = None
-        while response is None:
-            response = self._receive()
-        return response
-
-    def get_probabilities():
-        return {label: (byte - '_')/100 for label, byte in zip(self._labels, self._request('?P'))}
-
-    def _process(self, message):
-        if message == '?setup':
-            self._send('!model=' + self.model)
-        elif message.startswith('!labels'):
-            self._labels = message.split('=')[1].split('\t')
-            self._send('!notify=' + str(callable(self.onnotification)).lower())
-        else:
-            self.onnotification(message)
+    def _process(self, command, message):
+        if cmd == '':
+            self.ondetection(message)
+        elif cmd == 'setup':
+            self._send('setup', f'{{"type": "teachablemachine", "model": "{self.model}", "probability": {self.use_probabilities}}}')
+        elif cmd == 'labels':
+            self.labels = value.split('"')[1::2]
+        elif cmd == 'P' and self.use_probabilities:
+            for label, encoded_byte in zip(self.labels, message):
+                self.probability[label] = (encoded_byte - 32)/100
     
-    def _receive(self):
+    def receive(self):
         while self.nuart.poll(0):
             char = stdin.read(1)  
             if char == '\n':
-                result, self.buffer = self.buffer, ''
-                return result
+                received, self.buffer = self.buffer, ''
+                command, message = received.split('\t', 1) if '\t' in received else '', received
+                #message = message.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
+                self._process(command, message)
+                return received
             else: 
                 self.buffer += char
-        return None
-
-    def poll(self):
-        result = self._receive()
-        if result is not None:
-            self._process(result)
         
 
 
@@ -62,4 +97,4 @@ aibrick = AIBrickTeachableMachine(MODEL, OnNotification)
 hub.light.on(Color.WHITE)
 
 while True:
-    aibrick.poll()
+    aibrick.receive()
