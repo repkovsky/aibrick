@@ -78,12 +78,8 @@ function connect(connection) {
     })
     .then(() => {
         console.log('Notifications started');
-        // txCharacteristic.addEventListener('characteristicvaluechanged',
-        //                                   handleNotifications);
-        txCharacteristic.addEventListener('characteristicvaluechanged',
-                                          connection.onMsgReceived);
-
-                                          
+        const onMsgReceived = connection.onMsgReceived.bind(connection);
+        txCharacteristic.addEventListener('characteristicvaluechanged', onMsgReceived);
         console.log(bleDevice.name + ' Connected.');
         connection.onConnected()
     })
@@ -174,11 +170,22 @@ class BufferedNUS {
     }
   
     pushString(s) {
-        if(this.bleDevice && this.bleDevice.gatt.connected) {
+        if (this.bleDevice && this.bleDevice.gatt.connected) {
             console.log("push: " + s);
             for (let i = 0; i < s.length; i++) {
                 this.buffer.push(s[i].charCodeAt(0));
             }
+
+            // switch (typeof(s)){
+            //     case "string":
+            //         for (let i = 0; i < s.length; i++) {
+            //             this.buffer.push(s[i].charCodeAt(0));
+            //         }
+            //     case "object":
+            //         for (let i = 0; i < s.length; i++) {
+            //             this.buffer.push(s[i]);
+            //         }
+            // }
             if (!this.busy){
                 this.sendBuffer();
             }
@@ -189,15 +196,18 @@ class BufferedNUS {
         this.busy = true;
         let chunk = new Uint8Array(this.buffer.slice(0, MTU));
         this.buffer.splice(0, MTU);
+        // console.log("this.buffer.slice(0, MTU)" + this.buffer.slice(0, MTU));
+        // console.log("chunk" + chunk);
+        let self = this;
         this.rxCharacteristic.writeValue(chunk)
             .catch(async () => {
                 console.log("DOMException: GATT operation already in progress.")
             })
-            .then(() => {
-                if (this.buffer.length > 0) {
-                    this.sendBuffer();
+            .then(function() {
+                if (self.buffer.length > 0) {
+                    self.sendBuffer();
                 } else {
-                    this.busy = false;
+                    self.busy = false;
                 }
             });
     }

@@ -19,31 +19,44 @@ async function modelType(url){
     }
 }
 
-async function modelInit(url) {
-    const model_type = await modelType(url);
-    switch (model_type) {
-        case "audio":
-            audioInit(url);
-            const audio_visualizer = document.getElementById("audio-visualizer");
-            audio_visualizer.style.display = "block";
-            break;
-        case "image":
-            imageInit(url);
-            const webcam_overlay = document.getElementById("webcam-container");
-            webcam_overlay.style.display = "block";
-            break;
+async function modelInit(connection, config) {
+    if (config['type'] == 'teachablemachine'){
+        const model_type = await modelType(config['model']);
+        switch (model_type) {
+            case "audio":
+                audioInit(connection, config['model']);
+                const audio_visualizer = document.getElementById("audio-visualizer");
+                audio_visualizer.style.display = "block";
+                break;
+            case "image":
+                imageInit(connection, config['model']);
+                const webcam_overlay = document.getElementById("webcam-container");
+                webcam_overlay.style.display = "block";
+                break;
+        }
     }
 }
 
-function sendOnPrediction(classLabels, scores){
+function sendOnPrediction(connection, classLabels, scores, send_probability){
     // send label over BLE only when its score exceeds 0.5 and it is different from previous sent
+    let prob = Array();
     for (let i = 0; i < classLabels.length; i++) {
+        prob.push(Math.round(scores*100)+32)
         if (scores[i] > 0.5 && classLabels[i] != best_label){
             best_label = classLabels[i];
-            sendNotificationToHub(best_label);
-            break;
+            connection.sendText(best_label);
+            // break;
         }
     }
+    console.log('send_probability' + send_probability)
+    if (send_probability){
+        connection.sendMessage('p', prob);
+    }
+}
+
+function sendLabelsToHub(connection, model_labels){
+	console.log('sendLabelsToHub')
+	connection.sendMessage('labels', JSON.stringify(model_labels));
 }
 
 async function audioModel(url=""){
@@ -61,21 +74,24 @@ async function audioModel(url=""){
 
     // check that model and metadata are loaded via HTTPS requests.
     await recognizer.ensureModelLoaded();
-    model_loaded = true;
+    //model_loaded = true;
 
     return recognizer;
 }
 
-async function audioInit(url) {
-    const recognizer = await audioModel(url);
+async function audioInit(connection, config) {
+    const recognizer = await audioModel(config['model']);
     model_labels = recognizer.wordLabels();
-	sendLabelsToHub();
+	sendLabelsToHub(connection, model_labels);
     createPredictionBars(model_labels);
+    console.log(config)
+    console.log(config['probability'])
+    
 
     recognizer.listen(result => {
         model_scores = result.scores; 
         updatePredictionBars(model_labels, model_scores);
-        sendOnPrediction(model_labels, model_scores);
+        sendOnPrediction(connection, model_labels, model_scores, config['probability']);
     }, {
         includeSpectrogram: false, // in case listen should return result.spectrogram
         probabilityThreshold: 0.0,
@@ -97,7 +113,7 @@ async function imageInit(url) {
     // or files from your local hard drive
     // Note: the pose library adds "tmImage" object to your window (window.tmImage)
     model = await tmImage.load(modelURL, metadataURL);
-    model_loaded = true;
+    //model_loaded = true;
     model_labels = model.getClassLabels();
     model_scores = Array(model.getTotalClasses()).fill(0);
     createPredictionBars(model_labels);
