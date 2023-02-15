@@ -18,13 +18,6 @@ var bleServer;
 var nusService;
 var rxCharacteristic;
 var txCharacteristic;
-// var bleOnConnected = null;
-// var bleOnMsgReceived = null;
-// var bleOnDisconnected = null;
-
-// bleOnConnected = connection.onConnected;
-// bleOnMsgReceived = this.onMsgReceived;
-// bleOnDisconnected = this.onDisconnected;
 
 function connect(connection) {
     if (!navigator.bluetooth) {
@@ -105,27 +98,6 @@ function disconnect() {
     }
 }
 
-// function onDisconnectedHandler() {
-//     console.log(bleDevice.name + ' Disconnected.');
-//     if (bleOnDisconnected){
-//         bleOnDisconnected();
-//     }
-// }
-
-// async function handleNotifications(event) {
-//     let value = event.target.value;
-//     // Convert raw data bytes to character values and use these to 
-//     // construct a string.
-//     let str = "";
-//     for (let i = 0; i < value.byteLength; i++) {
-//         str += String.fromCharCode(value.getUint8(i));
-//     }
-//     console.log('notification: ' + str);
-//     if (bleOnMsgReceived){
-//         bleOnMsgReceived(str);
-//     }
-// }
-
 function nusSendString(s) {
     if(bleDevice && bleDevice.gatt.connected) {
         console.log("send: " + s);
@@ -173,19 +145,8 @@ class BufferedNUS {
         if (this.bleDevice && this.bleDevice.gatt.connected) {
             console.log("push: " + s);
             for (let i = 0; i < s.length; i++) {
-                this.buffer.push(s[i].charCodeAt(0));
+                this.buffer.push(s.charCodeAt(i));
             }
-
-            // switch (typeof(s)){
-            //     case "string":
-            //         for (let i = 0; i < s.length; i++) {
-            //             this.buffer.push(s[i].charCodeAt(0));
-            //         }
-            //     case "object":
-            //         for (let i = 0; i < s.length; i++) {
-            //             this.buffer.push(s[i]);
-            //         }
-            // }
             if (!this.busy){
                 this.sendBuffer();
             }

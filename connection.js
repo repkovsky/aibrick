@@ -1,4 +1,4 @@
-
+const SEP = "·";
 
 function setConnButtonState(new_state) {
     // console.log(new_state)
@@ -16,14 +16,10 @@ class Connection {
 
 	sendMessage(command, value) {
 		console.log("sendMessage");
-		this.tx_buffer.pushString(command + '=' + value + '\n');
-		// this.tx_buffer.pushString(command + '=')
-		// this.tx_buffer.pushString(value);
-		// this.tx_buffer.pushString('\n');
+		this.tx_buffer.pushString(command + SEP + value + '\n');
 	}
 
 	sendText(text) {
-		//.replace('\t', '\\t').replace('\n', '\\n').replace('\r', '\\r')
 		this.tx_buffer.pushString(text + '\n');
 	}
 
@@ -31,49 +27,35 @@ class Connection {
 		console.log("onConnected");
 		setConnButtonState("setup");
 		this.sendMessage('setup', '?');
-		// setTimeout(() => {
-		// 	console.log('Model loading timeout.');
-		// 	if (!model_loaded){
-		// 		modelInit(this, value);
-		// 		setConnButtonState("connected");
-		// 	}
-		// }, 5000);
 	}
 
 	onMsgReceived(event){
 		let payload = event.target.value;
 		console.log("onMsgReceived");
-		let s = "";
 		for (let i = 0; i < payload.byteLength; i++) {
-			s += String.fromCharCode(payload.getUint8(i));
+			this.rx_buffer += String.fromCharCode(payload.getUint8(i));
 		}
-		console.log(s);
-		this.rx_buffer += s;
 		if (this.rx_buffer.includes('\n')) {
-			let command, value;
-			let message = this.rx_buffer.slice(0, this.rx_buffer.indexOf('\n'));
-			if (message.includes('=')) {
-				const parts = message.split('=', 2);
+			let command, message;
+			let received = this.rx_buffer.slice(0, this.rx_buffer.indexOf('\n'));
+			if (received.includes(SEP)) {
+				const parts = received.split(SEP, 2);
 				command = parts[0];
-				value = parts[1];
+				message = parts[1];
 			} else {
 				command = '';
-				value = message;
+				message = received;
 			}
 			// console.log("command:" + command);
-			// console.log("value:" + value);
+			// console.log("value:" + message);
 			this.rx_buffer = this.rx_buffer.slice(this.rx_buffer.indexOf('\n')+1);
 			if (command == 'setup'){
-				console.log(JSON.parse(value))
-				modelInit(this, JSON.parse(value));
+				console.log(JSON.parse(message))
+				modelInit(this, JSON.parse(message));
 				setConnButtonState("connected");
 			} else {
-				console.log(message)
+				console.log(received)
 			}
-			//  else if (command in this.channels){
-			// 	this.channels[command] = value.toLowerCase() == 'true';
-			// }
-			// console.log(state)
 		}
 	}
 

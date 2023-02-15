@@ -1,8 +1,6 @@
-var best_label = "";
-var model_url = "";
-var model_loaded = false;
-var model_labels = [];
-var model_scores = [];
+let best_label = "";
+let model_config = {};
+let model_connection = null;
 
 async function modelType(url){
     if (url){
@@ -20,16 +18,18 @@ async function modelType(url){
 }
 
 async function modelInit(connection, config) {
+    model_config = config;
+    model_connection = connection;
     if (config['type'] == 'teachablemachine'){
         const model_type = await modelType(config['model']);
         switch (model_type) {
             case "audio":
-                audioInit(connection, config['model']);
+                audioInit();
                 const audio_visualizer = document.getElementById("audio-visualizer");
                 audio_visualizer.style.display = "block";
                 break;
             case "image":
-                imageInit(connection, config['model']);
+                imageInit();
                 const webcam_overlay = document.getElementById("webcam-container");
                 webcam_overlay.style.display = "block";
                 break;
@@ -37,26 +37,26 @@ async function modelInit(connection, config) {
     }
 }
 
-function sendOnPrediction(connection, classLabels, scores, send_probability){
-    // send label over BLE only when its score exceeds 0.5 and it is different from previous sent
-    let prob = Array();
+function sendOnPrediction(classLabels, scores){
+    let probabilities = Array(classLabels.length);
     for (let i = 0; i < classLabels.length; i++) {
-        prob.push(Math.round(scores*100)+32)
+        probabilities[i] = Math.round(scores[i]*100)
         if (scores[i] > 0.5 && classLabels[i] != best_label){
+            // label which score exceeds 0.5 and it is different from previous best label
             best_label = classLabels[i];
-            connection.sendText(best_label);
-            // break;
         }
     }
-    console.log('send_probability' + send_probability)
-    if (send_probability){
-        connection.sendMessage('p', prob);
+    if (model_config['probability']){
+        model_connection.sendMessage('p', probabilities.join());
+    }
+    if (model_config['detection']){
+        model_connection.sendMessage('d', best_label);
     }
 }
 
-function sendLabelsToHub(connection, model_labels){
+function sendLabelsToHub(model_labels){
 	console.log('sendLabelsToHub')
-	connection.sendMessage('labels', JSON.stringify(model_labels));
+	model_connection.sendMessage('labels', JSON.stringify(model_labels));
 }
 
 async function audioModel(url=""){
@@ -74,24 +74,19 @@ async function audioModel(url=""){
 
     // check that model and metadata are loaded via HTTPS requests.
     await recognizer.ensureModelLoaded();
-    //model_loaded = true;
-
     return recognizer;
 }
 
-async function audioInit(connection, config) {
-    const recognizer = await audioModel(config['model']);
-    model_labels = recognizer.wordLabels();
-	sendLabelsToHub(connection, model_labels);
-    createPredictionBars(model_labels);
-    console.log(config)
-    console.log(config['probability'])
-    
+async function audioInit() {
+    const recognizer = await audioModel(model_config['model']);
+    let model_labels = recognizer.wordLabels();
+	sendLabelsToHub(model_labels);
+    createPredictionBars(model_labels);    
 
     recognizer.listen(result => {
-        model_scores = result.scores; 
+        let model_scores = result.scores; 
         updatePredictionBars(model_labels, model_scores);
-        sendOnPrediction(connection, model_labels, model_scores, config['probability']);
+        sendOnPrediction(model_labels, model_scores);
     }, {
         includeSpectrogram: false, // in case listen should return result.spectrogram
         probabilityThreshold: 0.0,
@@ -104,9 +99,9 @@ async function audioInit(connection, config) {
 let model, webcam, flip;
 
 // Load the image model and setup the webcam
-async function imageInit(url) {
-    const modelURL = url + "model.json";
-    const metadataURL = url + "metadata.json";
+async function imageInit() {
+    const modelURL = model_config['model'] + "model.json";
+    const metadataURL = model_config['model'] + "metadata.json";
 
     // load the model and metadata
     // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
@@ -114,8 +109,8 @@ async function imageInit(url) {
     // Note: the pose library adds "tmImage" object to your window (window.tmImage)
     model = await tmImage.load(modelURL, metadataURL);
     //model_loaded = true;
-    model_labels = model.getClassLabels();
-    model_scores = Array(model.getTotalClasses()).fill(0);
+    let model_labels = model.getClassLabels();
+	sendLabelsToHub(model_labels);
     createPredictionBars(model_labels);
     webcamInit(true);
 }
@@ -140,6 +135,7 @@ async function webcamInit(new_flip){
 async function imageLoop() {
     webcam.update(); // update the webcam frame
     const prediction = await model.predict(webcam.canvas);
+    let model_scores = Array(model.getTotalClasses());
     for (let i = 0; i < model.getTotalClasses(); i++){
         model_scores[model_labels.indexOf(prediction[i].className)] = prediction[i].probability;
     }

@@ -3,6 +3,7 @@ from pybricks.parameters import Color
 from usys import stdin
 from uselect import poll
 
+SEP = '·'
 
 # class AIBrick:
 #     def __init__(self):
@@ -10,8 +11,8 @@ from uselect import poll
 #         self.nuart = poll()
 #         self.nuart.register(stdin)
 
-#     def _send(self, cmd, value):
-        # print(cmd, '\t', value, '\n', sep=None)
+#     def _send(self, command, message):
+#         print(command, SEP, message, '\n', sep='')
 
 #     def _process(self, message):
 #         pass
@@ -20,81 +21,107 @@ from uselect import poll
 #         while self.nuart.poll(0):
 #             char = stdin.read(1)  
 #             if char == '\n':
-#                 message, self.buffer = self.buffer, ''
-#                 self._process(message)
+#                 received, self.buffer = self.buffer, ''
+#                 if SEP in received:
+#                     cmd, message = received.split(SEP, 1)
+#                 else:
+#                     cmd, message = '', received
+#                 self._process(cmd, message)
+#                 return cmd
 #             else: 
 #                 self.buffer += char
 
 
 # class AIBrickTeachableMachine(AIBrick):
-#     def __init__(self, model='', ondetection=None, use_probabilities=False):
+#     def __init__(self, model='', detection=True, probability=False):
 #         super().__init__()
 #         self.model = model
-#         self.ondetection = ondetection
-#         self.use_probabilities = use_probabilities
-#         self._labels = []
-#         self.probability = dict()
+#         self.send_detection = detection
+#         self.send_probability = probability
+#         self.labels = []
 
-#     def _process(self, message):
-#         if '\t' in message:
-#             cmd, value = message.split('\t')
-#             if cmd == 'setup':
-#                 self._send('model', self.model)
-#             elif cmd == 'labels':
-#                 self._labels = value.split(' ')
-#                 self._send('notify', str(callable(self.ondetection)).lower())
-#             elif cmd == 'P':
-#                 self.probability = {label: (encoded_byte - '_')/100 
-#                                      for label, encoded_byte in zip(self._labels, value)}
+#     def _process(self, cmd, message):
+#         if cmd == 'setup':
+#             self._send('setup', '{' + \
+#                                 '"type": "teachablemachine",' + \
+#                                 f'"model": "{self.model}",' + \
+#                                 f'"detection": {int(self.send_detection)},' + \
+#                                 f'"probability": {int(self.send_probability)}' + \
+#                                 '}')
+#         elif cmd == 'labels':
+#             self.labels = message.split('"')[1::2]
+#         if cmd == 'd':
+#             self.detection = message
+#         elif cmd == 'p' and self.send_probability:
+#             probabilities = message.split(',')
+#             if all([p.isdigit() for p in probabilities]):
+#                 self.probability = {label: int(p) for label, p in
+#                                     zip(self.labels, probabilities)}
+#             elif message.endswith('setup' + SEP + '?'):
+#                 self._process('setup', '?')
 #         else:
-#             self.ondetection(message)
+#             print("cmd", cmd, len(cmd), "message", message)
 
 
 class AIBrickTeachableMachine:
-    def __init__(self, model='', ondetection=None, use_probabilities=False):
+    def __init__(self, model='', detection=True, probability=False):
         self.model = model
-        self.ondetection = ondetection
-        self.use_probabilities = use_probabilities
+        self.send_detection = detection
+        self.send_probability = probability
+        self.labels = []
         self.buffer = ''
         self.nuart = poll()
         self.nuart.register(stdin)
-        self.labels = []
 
     def _send(self, command, message):
-        print(command, '\t', message, '\n', sep=None)
+        print(command, SEP, message, '\n', sep='')
 
-    def _process(self, command, message):
-        if cmd == '':
-            self.ondetection(message)
-        elif cmd == 'setup':
-            self._send('setup', f'{{"type": "teachablemachine", "model": "{self.model}", "probability": {self.use_probabilities}}}')
+    def _process(self, cmd, message):
+        print(SEP + cmd + SEP + message)
+        if cmd == 'setup':
+            self._send('setup', '{' + \
+                                '"type": "teachablemachine",' + \
+                                f'"model": "{self.model}",' + \
+                                f'"detection": {int(self.send_detection)},' + \
+                                f'"probability": {int(self.send_probability)}' + \
+                                '}')
         elif cmd == 'labels':
-            self.labels = value.split('"')[1::2]
-        elif cmd == 'P' and self.use_probabilities:
-            for label, encoded_byte in zip(self.labels, message):
-                self.probability[label] = (encoded_byte - 32)/100
+            self.labels = message.split('"')[1::2]
+        if cmd == 'd':
+            self.detection = message
+        elif cmd == 'p' and self.send_probability:
+            probabilities = message.split(',')
+            if all([p.isdigit() for p in probabilities]):
+                self.probability = {label: int(p) for label, p in
+                                    zip(self.labels, probabilities)}
+            elif message.endswith('setup' + SEP + '?'):
+                self._process('setup', '?')
+        else:
+            print("cmd", cmd, len(cmd), "message", message)
     
     def receive(self):
         while self.nuart.poll(0):
             char = stdin.read(1)  
             if char == '\n':
                 received, self.buffer = self.buffer, ''
-                command, message = received.split('\t', 1) if '\t' in received else '', received
-                #message = message.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
-                self._process(command, message)
-                return received
+                if SEP in received:
+                    cmd, message = received.split(SEP, 1)
+                else:
+                    cmd, message = '', received
+                self._process(cmd, message)
+                return cmd
             else: 
                 self.buffer += char
         
 
-
-def OnNotification(command):
-    print(command)
-
 hub = PrimeHub()
 MODEL = ''
-aibrick = AIBrickTeachableMachine(MODEL, OnNotification)
+aibrick = AIBrickTeachableMachine(MODEL, detection=False, probability=True)
 hub.light.on(Color.WHITE)
 
 while True:
-    aibrick.receive()
+    result = aibrick.receive()
+    if (result == 'detection'):
+        print(aibrick.detection)
+    elif (result == 'probability'):
+        print(aibrick.probability)

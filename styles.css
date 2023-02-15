@@ -1,6 +1,6 @@
 
 body {
-    font-family: "Segoe UI","Helvetica Neue","Lucida Grande",Arial,sans-serif;
+    font-family: "Gill Sans", "Segoe UI","Helvetica Neue","Lucida Grande",Helvetica,Arial,sans-serif;
     background-color: #e8eaed;
 }
 
@@ -16,10 +16,14 @@ body {
 #app-name {
     font-size: 24px;
     line-height: 28px;
-    font-weight: 500;
+    font-weight: bold;
     color: #1967D2;
     margin: 5px;
     text-shadow: 1px 1px 2px #aaa;
+    display: inline;
+}
+#app-name-ai {
+    color: limegreen;
     display: inline;
 }
 
@@ -136,6 +140,7 @@ button:focus {
     color: #fff;
     border-radius: inherit;
     width: 0%;
+    transition: 150ms ease-out;
 }
 
 .footnote {
