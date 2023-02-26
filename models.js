@@ -25,13 +25,9 @@ async function modelInit(connection, config) {
         switch (model_type) {
             case "audio":
                 audioInit();
-                const audio_visualizer = document.getElementById("audio-visualizer");
-                audio_visualizer.style.display = "block";
                 break;
             case "image":
                 imageInit();
-                const webcam_overlay = document.getElementById("webcam-container");
-                webcam_overlay.style.display = "block";
                 break;
         }
     }
@@ -86,12 +82,13 @@ async function audioModel(url=""){
 
 async function audioInit() {
     const recognizer = await audioModel(model_config['model']);
-    let model_labels = recognizer.wordLabels();
+    showAudioContainer();
+    const model_labels = recognizer.wordLabels();
 	sendLabelsToHub(model_labels);
     createPredictionBars(model_labels);    
 
     recognizer.listen(result => {
-        let model_scores = result.scores; 
+        const model_scores = result.scores; 
         updatePredictionBars(model_labels, model_scores);
         sendOnPrediction(model_labels, model_scores);
     }, {
@@ -115,6 +112,7 @@ async function imageInit() {
     // or files from your local hard drive
     // Note: the pose library adds "tmImage" object to your window (window.tmImage)
     model = await tmImage.load(modelURL, metadataURL);
+    showWebcamContainer();
     let model_labels = model.getClassLabels();
 	sendLabelsToHub(model_labels);
     createPredictionBars(model_labels);

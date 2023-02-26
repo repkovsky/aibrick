@@ -1,85 +1,91 @@
+:root {
+    --text-color: #425066;
+}
+@font-face { font-family: OpenSans; src: url('OpenSans-Medium.ttf'); } 
 
 body {
-    font-family: "Segoe UI","Helvetica Neue","Lucida Grande",Helvetica,Arial,sans-serif;
+    font-family: OpenSans,"Segoe UI","Helvetica Neue","Lucida Grande",Helvetica,Arial,sans-serif;
+    color: var(--text-color);
     background-color: #e8eaed;
+    font-weight: 600;
 }
 
 .app {
     margin: auto;
     width: 375px;
-    padding: 10px;
     border-radius: 10px;
     background-color: white;
     box-shadow: 0px 5px 5px -2px gray;
 }
 
-@font-face { font-family: OpenSans; src: url('OpenSans-Medium.ttf'); } 
-#app-name {
-    font-size: 32px;
-    font-family: OpenSans;
-    line-height: 28px;
-    font-weight: 500;
-    color: #425066;
-    margin: 5px;
-    display: inline;
-}
-#app-name-ai {
-    color: #FD8917;
-    display: inline;
-}
-
-.title {
+.title-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 10px;
+    padding: 10px;
+    border-bottom: 1px solid #aaa;
 }
 
-button {
-    width: 100%;
-    background-color: #f8f9fa;
-    border: 1px solid lightblue;
-    border-radius: 4px;
-    color: #3c4043;
-    cursor: pointer;
-    font-family: arial,sans-serif;
+#app-logo {
+    padding-top: 5px;
+    padding-right: 5px;
+}
+
+#app-name {
+    font-family: OpenSans;
+    font-size: 32px;
+    line-height: 28px;
+    font-weight: 600;
+}
+
+#app-name-ai {
+    color: #FD8917;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    transition: 150ms ease-out;
+}
+
+#connect-button {
+    font-family: OpenSans;
     font-size: 14px;
-    height: 36px;
-    padding: 0 16px;
+    font-weight: 600;
     text-align: center;
+    background: url(bt_connect.png) no-repeat 50% 30%, #eff7ff;
+    border: 1px solid lightblue;
+    border-radius: 20px;
+    cursor: pointer;
+    height: 150px;
+    width: 150px;
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
-    white-space: pre;
     display: block;
-    transition: 150ms ease-out;
   }
   
-button:hover {
+#connect-button:hover {
     border-color: #dadce0;
     box-shadow: rgba(0, 0, 0, .1) 0 1px 1px;
     color: #202124;
 }
-  
-/* button:focus {
-    border-color: #4285f4;
-    outline: none;
-} */
 
-.button-container {
-    display: flex;
-    justify-content: right;
-    align-items: center;
-    padding-bottom: 10px;
-    /* border-bottom: 1px solid #aaa; */
-    margin-bottom: 10px;
+#connect-button-caption {
+    position: relative;
+    top: 30%;
+    color: steelblue;
+ }
+
+ #error-container {
+    display: none;
+    text-align: center;
+    color:darkred;
 }
 
-/*#webcam-overlay {
-    display: none;
-}*/
-
-#audio-visualizer {
+#audio-container {
     display: none;
 }
 
@@ -88,9 +94,10 @@ button:hover {
     border-radius: 10px;
     width: 300px;
     height: 300px;
+    line-height: 300px;
     margin: auto;
     text-align: center;
-    line-height: 300px;
+    font-size: 14px;
     background-color: #eee;
 }
 
@@ -100,18 +107,20 @@ button:hover {
     height: 100%;
 }
 
-
+/*#webcam-overlay {
+    display: none;
+}
 #rotate {
     position: relative; 
     z-index: 100; 
     top: 30px; 
     left: 45px;
     visibility: hidden;
-}
+}*/
 
 #label-container {
+    display: none;
     margin-top: 10px;
-    /* border-top: 1px solid #aaa; */
     padding: 10px;
 }
 
@@ -124,8 +133,9 @@ button:hover {
 }
 
 .label {
+    font-family: OpenSans;
     font-size: 12px;
-    font-weight: bold;
+    font-weight: 600;
     text-align: right;
     width: 20%;
 	display: inline-block;
@@ -141,8 +151,9 @@ button:hover {
 }
 
 .bar {
+    font-family: OpenSans;
     font-size: 10px;
-    font-weight: bold;
+    font-weight: 600;
     text-align: right;
     color: #fff;
     border-radius: inherit;
@@ -151,50 +162,17 @@ button:hover {
 }
 
 .footnote {
-    /* border-top: 1px solid #aaa; */
-    padding-top: 10px;
+    border-top: 1px solid #aaa;
+    padding: 10px;
     text-align: center;
 }
 
 a {
-    color: #888;
-    font-size: 10px;
+    color: var(--text-color);
+    font-size: 12px;
+    text-decoration: none;
 }
 
-span {
-    display: block;
-    border-radius: 3px;
-    bottom: 0px;
-    width: 5px;
-    height: 5px;
-    background: #1967D2;
-    position: absolute;
-    animation: audio-wave 1.5s infinite;
-  }
-  
-  span:nth-child(2) {
-  left: 11px;
-  animation-delay: 0.2s;
-  }
-  
-  span:nth-child(3) {
-  left: 22px;
-  animation-delay: 0.4s;
-  }
-  
-  span:nth-child(4) {
-  left: 33px;
-  animation-delay: 0.6s;
-  }
-  
-  span:nth-child(5) {
-  left: 44px;
-  animation-delay: 0.8s;
-  }
-  
-  @keyframes audio-wave {
-      10% {height:20px;transform:translateY(0px);}
-      25% {height:40px;transform:translateY(20px);}
-      80% {height:5px;transform:translateY(0px);}
-      100% {height:5px;transform:translateY(0px);}
-  }
+a:hover {
+    text-decoration: underline;
+}

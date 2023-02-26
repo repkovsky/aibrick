@@ -10,22 +10,29 @@
 	<link rel="stylesheet" href="styles.css">
 	<link rel="stylesheet" href="mic.css">
 	<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
-	<title>AI Brick</title>
+	<title>aiBrick</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
 	<div class="app">
-		<div class="title"><img src="ai-brick-ic.png"><div id="app-name"><div id="app-name-ai">ai</div>Brick</div></div>
-		<div class="button-container">
-			<button id="clientConnectButton" role="button" onclick="connectionInit()">Connect to hub</button>
+		<div class="title-container">
+			<img src="ai-brick-ic.png" id="app-logo">
+			<span id="app-name"><span id="app-name-ai">ai</span>Brick</span>
 		</div>
-		
+		<div class="button-container">
+			<button id="connect-button" role="button" onclick="connectionInit()">
+				<div id="connect-button-caption">Connect to hub</div>
+			</button>
+		</div>
+		<div id="error-container">
+			Hub disconnected, <a href="#" onclick="location.reload()">click</a> to reload.
+		</div>
 		<div id="webcam-container"></div>
 		<!--<div id="webcam-overlay">
 			<img id="rotate" src="rotate.png" onclick="toggleWebcam()">
 		</div>-->
-		<div id="audio-visualizer">
-			<div class="mic"><i class="fa fa-microphone" aria-hidden="true" style="padding-top: 9px"></i></div>
+		<div id="audio-container">
+			<div class="mic"><i class="fa fa-microphone" aria-hidden="true"></i></div>
 			<div class="mic mic-overlay"></div>
 		</div>
 		<div id="label-container"></div>
