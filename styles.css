@@ -1,6 +1,6 @@
 
 body {
-    font-family: "Gill Sans", "Segoe UI","Helvetica Neue","Lucida Grande",Helvetica,Arial,sans-serif;
+    font-family: "Segoe UI","Helvetica Neue","Lucida Grande",Helvetica,Arial,sans-serif;
     background-color: #e8eaed;
 }
 
@@ -13,17 +13,18 @@ body {
     box-shadow: 0px 5px 5px -2px gray;
 }
 
+@font-face { font-family: OpenSans; src: url('OpenSans-Medium.ttf'); } 
 #app-name {
-    font-size: 24px;
+    font-size: 32px;
+    font-family: OpenSans;
     line-height: 28px;
-    font-weight: bold;
-    color: #1967D2;
+    font-weight: 500;
+    color: #425066;
     margin: 5px;
-    text-shadow: 1px 1px 2px #aaa;
     display: inline;
 }
 #app-name-ai {
-    color: limegreen;
+    color: #FD8917;
     display: inline;
 }
 
@@ -35,7 +36,7 @@ body {
 }
 
 button {
-    width: 200px;
+    width: 100%;
     background-color: #f8f9fa;
     border: 1px solid lightblue;
     border-radius: 4px;
@@ -44,7 +45,6 @@ button {
     font-family: arial,sans-serif;
     font-size: 14px;
     height: 36px;
-    min-width: 54px;
     padding: 0 16px;
     text-align: center;
     user-select: none;
@@ -52,6 +52,7 @@ button {
     touch-action: manipulation;
     white-space: pre;
     display: block;
+    transition: 150ms ease-out;
   }
   
 button:hover {
@@ -60,16 +61,17 @@ button:hover {
     color: #202124;
 }
   
-button:focus {
+/* button:focus {
     border-color: #4285f4;
     outline: none;
-}
+} */
+
 .button-container {
     display: flex;
-    justify-content: center;
+    justify-content: right;
     align-items: center;
     padding-bottom: 10px;
-    border-bottom: 1px solid #aaa;
+    /* border-bottom: 1px solid #aaa; */
     margin-bottom: 10px;
 }
 
@@ -79,11 +81,9 @@ button:focus {
 
 #audio-visualizer {
     display: none;
-    margin: 30px 150px 0px 150px;
-    padding-bottom: 20px;
 }
 
-#webcam-container, #webcam-canvas {
+#webcam-container { 
     display: none;
     border-radius: 10px;
     width: 300px;
@@ -93,6 +93,13 @@ button:focus {
     line-height: 300px;
     background-color: #eee;
 }
+
+#webcam-canvas {
+    border-radius: 10px;
+    width: 100%;
+    height: 100%;
+}
+
 
 #rotate {
     position: relative; 
@@ -104,7 +111,7 @@ button:focus {
 
 #label-container {
     margin-top: 10px;
-    border-top: 1px solid #aaa;
+    /* border-top: 1px solid #aaa; */
     padding: 10px;
 }
 
@@ -144,7 +151,7 @@ button:focus {
 }
 
 .footnote {
-    border-top: 1px solid #aaa;
+    /* border-top: 1px solid #aaa; */
     padding-top: 10px;
     text-align: center;
 }

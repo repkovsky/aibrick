@@ -1,10 +1,5 @@
 const SEP = "·";
 
-function setConnButtonState(new_state) {
-    // console.log(new_state)
-    document.getElementById("clientConnectButton").innerHTML = new_state;
-}
-
 class Connection {
     constructor() {
 		this.rx_buffer = "";
@@ -14,19 +9,19 @@ class Connection {
 		this.tx_buffer = new BufferedNUS(bleDevice, rxCharacteristic);
 	}
 
-	sendMessage(command, value) {
+	sendMessage(command, value, priority=False) {
 		console.log("sendMessage");
-		this.tx_buffer.pushString(command + SEP + value + '\n');
+		this.tx_buffer.pushString(command + SEP + value + '\n', priority);
 	}
 
 	sendText(text) {
-		this.tx_buffer.pushString(text + '\n');
+		this.tx_buffer.pushString(text + '\n', true);
 	}
 
 	onConnected(){
 		console.log("onConnected");
 		setConnButtonState("setup");
-		this.sendMessage('setup', '?');
+		this.sendMessage('setup', '?', true);
 	}
 
 	onMsgReceived(event){
@@ -61,7 +56,7 @@ class Connection {
 
 	onDisconnected(){
 		// state = State.BLE_disconnected;
-		setConnButtonState("BLE_disconnected");
+		setConnButtonState("disconnected");
 	}
 }
 

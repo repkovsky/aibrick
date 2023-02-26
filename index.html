@@ -8,12 +8,14 @@
 	<script src="connection.js"></script>
 	<script src="interface.js"></script>
 	<link rel="stylesheet" href="styles.css">
-	<title>AI-Brick</title>
+	<link rel="stylesheet" href="mic.css">
+	<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+	<title>AI Brick</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
 	<div class="app">
-		<div class="title"><img src="ai-brick.png"><div id="app-name"><div id="app-name-ai">ai</div>brick</div></div>
+		<div class="title"><img src="ai-brick-ic.png"><div id="app-name"><div id="app-name-ai">ai</div>Brick</div></div>
 		<div class="button-container">
 			<button id="clientConnectButton" role="button" onclick="connectionInit()">Connect to hub</button>
 		</div>
@@ -23,23 +25,13 @@
 			<img id="rotate" src="rotate.png" onclick="toggleWebcam()">
 		</div>-->
 		<div id="audio-visualizer">
-			<div style="position: relative;">
-				<span></span>
-				<span></span>
-				<span></span>
-				<span></span>
-				<span></span>
-			</div>
+			<div class="mic"><i class="fa fa-microphone" aria-hidden="true" style="padding-top: 9px"></i></div>
+			<div class="mic mic-overlay"></div>
 		</div>
 		<div id="label-container"></div>
 		<div class="footnote">
 			<a href="https://repkovsky.github.io/ai-brick">About the project</a>
 		</div>
 	</div>
-	<script type="text/javascript">
-		//connectionInit();
-		//modelInit('');
-		//modelInit('https://teachablemachine.withgoogle.com/models/w6XfqRk9P/');
-	</script>
   </body>
 </html>

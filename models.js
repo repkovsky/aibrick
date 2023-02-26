@@ -39,24 +39,31 @@ async function modelInit(connection, config) {
 
 function sendOnPrediction(classLabels, scores){
     let probabilities = Array(classLabels.length);
+    let detection = false;
     for (let i = 0; i < classLabels.length; i++) {
-        probabilities[i] = Math.round(scores[i]*100)
+        let probability = Math.round(scores[i]*100);
+        if (probability > 0){
+            probabilities[i] = Math.round(scores[i]*100);
+        } else {
+            probabilities[i] = '';
+        }
         if (scores[i] > 0.5 && classLabels[i] != best_label){
             // label which score exceeds 0.5 and it is different from previous best label
             best_label = classLabels[i];
+            detection = true;
         }
     }
     if (model_config['probability']){
-        model_connection.sendMessage('p', probabilities.join());
+        model_connection.sendMessage('p', probabilities.join(), false);
     }
-    if (model_config['detection']){
-        model_connection.sendMessage('d', best_label);
+    if (detection && model_config['detection']){
+        model_connection.sendMessage('d', best_label, true);
     }
 }
 
 function sendLabelsToHub(model_labels){
 	console.log('sendLabelsToHub')
-	model_connection.sendMessage('labels', JSON.stringify(model_labels));
+	model_connection.sendMessage('labels', JSON.stringify(model_labels), true);
 }
 
 async function audioModel(url=""){
@@ -108,7 +115,6 @@ async function imageInit() {
     // or files from your local hard drive
     // Note: the pose library adds "tmImage" object to your window (window.tmImage)
     model = await tmImage.load(modelURL, metadataURL);
-    //model_loaded = true;
     let model_labels = model.getClassLabels();
 	sendLabelsToHub(model_labels);
     createPredictionBars(model_labels);
@@ -128,14 +134,15 @@ async function webcamInit(new_flip){
     webcam.canvas.id = "webcam-canvas";
     webcam_container.innerHTML = "";
     webcam_container.appendChild(webcam.canvas);
-    rotate_button = document.getElementById("rotate")
-    rotate_button.style.visibility = "visible";
+    // rotate_button = document.getElementById("rotate")
+    // rotate_button.style.visibility = "visible";
 }
 
 async function imageLoop() {
     webcam.update(); // update the webcam frame
     const prediction = await model.predict(webcam.canvas);
     let model_scores = Array(model.getTotalClasses());
+    let model_labels = model.getClassLabels();
     for (let i = 0; i < model.getTotalClasses(); i++){
         model_scores[model_labels.indexOf(prediction[i].className)] = prediction[i].probability;
     }

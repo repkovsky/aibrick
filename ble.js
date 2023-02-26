@@ -98,38 +98,6 @@ function disconnect() {
     }
 }
 
-function nusSendString(s) {
-    if(bleDevice && bleDevice.gatt.connected) {
-        console.log("send: " + s);
-        let val_arr = new Uint8Array(s.length)
-        for (let i = 0; i < s.length; i++) {
-            let val = s[i].charCodeAt(0);
-            val_arr[i] = val;
-        }
-        sendNextChunk(val_arr);
-    } else {
-        console.log('Not connected to a device yet.');
-    }
-}
-
-function sendNextChunk(a) {
-    let chunk = a.slice(0, MTU);
-    rxCharacteristic.writeValue(chunk)
-        .catch(async () =>  {
-            console.log("DOMException: GATT operation already in progress.")
-            Promise.resolve()
-                .then(() => new Promise(resolve => setTimeout(resolve, 300)))
-                .then(() => { 
-                    console.log('Delayed.');
-                    rxCharacteristic.writeValue(chunk);
-                });
-        })
-        .then(function() {
-            if (a.length > MTU) {
-                sendNextChunk(a.slice(MTU));
-            }
-        });
-}
 
 class BufferedNUS {
 
@@ -141,8 +109,8 @@ class BufferedNUS {
         console.log("BufferedNUS ready")
     }
   
-    pushString(s) {
-        if (this.bleDevice && this.bleDevice.gatt.connected) {
+    pushString(s, priority=false) {
+        if (this.bleDevice && this.bleDevice.gatt.connected && (priority || !this.busy)) {
             console.log("push: " + s);
             for (let i = 0; i < s.length; i++) {
                 this.buffer.push(s.charCodeAt(i));

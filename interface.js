@@ -33,3 +33,22 @@ function updatePredictionBars(classLabels, scores){
 		bar.style.width = classPrediction;
 	}
 }
+
+function setConnButtonState(state, type=''){
+	console.log("setConnButtonState", state)
+	switch (state){
+		case "connected":
+			document.getElementById("clientConnectButton").style.width = "36px";
+			document.getElementById("clientConnectButton").style.background = "url(bt_ok.png) no-repeat center";
+			document.getElementById("clientConnectButton").innerHTML = "";
+			document.getElementById("clientConnectButton").onclick = function() { location.reload(); };
+			break;
+		case "disconnected":
+			document.getElementById("clientConnectButton").style.borderColor = "red";
+			document.getElementById("clientConnectButton").innerHTML = "Connection failed.";
+		case "setup":
+			document.getElementById("clientConnectButton").innerHTML = "Initializing...";
+			break;
+	}
+
+}
