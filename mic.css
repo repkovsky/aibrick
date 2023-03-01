@@ -10,7 +10,9 @@
 }
 
 .fa {
-    padding-top: 9px;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
 }
   
 .mic {
@@ -43,13 +45,13 @@
     animation: pulsate infinite 1.5s;
 }
   
-@-webkit-keyframes pulsate {
+@keyframes pulsate {
     0% {
-    -webkit-transform: scale(1, 1);
+    transform: scale(0.9, 0.9);
     opacity: 1;
     }
     100% {
-    -webkit-transform: scale(1.3, 1.3);
+    transform: scale(1.2, 1.2);
     opacity: 0;
     }
 }

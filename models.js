@@ -1,14 +1,20 @@
-let best_label = "";
+let best_label = '';
 let model_config = {};
 let model_connection = null;
+let frame_timer = 0;
+let frame_period = 200;
 
 async function modelType(url){
     if (url){
         const metadata = await (await fetch(url + "metadata.json")).json();
         if (metadata.hasOwnProperty('tfjsSpeechCommandsVersion')){
             return 'audio';
-        } else if (metadata.hasOwnProperty('tmVersion')){
-            return 'image';
+        } else if (metadata.hasOwnProperty('packageName')){
+            if (metadata['packageName'] == '@teachablemachine/image') {
+                return 'image';
+            } else if (metadata['packageName'] == '@teachablemachine/pose') {
+                return 'pose';
+            }
         } else {
             return undefined;
         }
@@ -20,6 +26,9 @@ async function modelType(url){
 async function modelInit(connection, config) {
     model_config = config;
     model_connection = connection;
+    if ('fps_limit' in config){
+        frame_period = 1000/config['fps_limit'];
+    }
     if (config['type'] == 'teachablemachine'){
         const model_type = await modelType(config['model']);
         switch (model_type) {
@@ -29,7 +38,12 @@ async function modelInit(connection, config) {
             case "image":
                 imageInit();
                 break;
+            default:
+                displayError('Unsupported Teachable Machine configuration ("' + model_type + '").');
+                break;
         }
+    } else {
+        displayError('Unsupported model type (' + config['type'] + ').');
     }
 }
 
@@ -121,31 +135,35 @@ async function imageInit() {
 
 async function webcamInit(new_flip){
     flip = new_flip;
-    const webcam_container = document.getElementById("webcam-container");
+    const webcam_container = document.getElementById("webcam-canvas-container");
     webcam_container.innerHTML = "Setting up camera...";
     webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
     await webcam.setup(); // request access to the webcam
     await webcam.play();
+    frame_timer = performance.now();
     window.requestAnimationFrame(imageLoop);
 
     // append elements to the DOM
     webcam.canvas.id = "webcam-canvas";
     webcam_container.innerHTML = "";
     webcam_container.appendChild(webcam.canvas);
-    // rotate_button = document.getElementById("rotate")
-    // rotate_button.style.visibility = "visible";
+    rotate_button = document.getElementById("rotate")
+    rotate_button.style.visibility = "visible";
 }
 
 async function imageLoop() {
     webcam.update(); // update the webcam frame
-    const prediction = await model.predict(webcam.canvas);
-    let model_scores = Array(model.getTotalClasses());
-    let model_labels = model.getClassLabels();
-    for (let i = 0; i < model.getTotalClasses(); i++){
-        model_scores[model_labels.indexOf(prediction[i].className)] = prediction[i].probability;
+    if (performance.now() - frame_timer > frame_period){
+        frame_timer = performance.now();
+        const prediction = await model.predict(webcam.canvas);
+        let model_scores = Array(model.getTotalClasses());
+        let model_labels = model.getClassLabels();
+        for (let i = 0; i < model.getTotalClasses(); i++){
+            model_scores[model_labels.indexOf(prediction[i].className)] = prediction[i].probability;
+        }
+        updatePredictionBars(model_labels, model_scores);
+        sendOnPrediction(model_labels, model_scores);
     }
-    updatePredictionBars(model_labels, model_scores);
-    sendOnPrediction(model_labels, model_scores);
     window.requestAnimationFrame(imageLoop);
 }
 

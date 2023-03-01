@@ -19,18 +19,19 @@
 			<img src="ai-brick-ic.png" id="app-logo">
 			<span id="app-name"><span id="app-name-ai">ai</span>Brick</span>
 		</div>
-		<div class="button-container">
+		<div id="button-container">
 			<button id="connect-button" role="button" onclick="connectionInit()">
 				<div id="connect-button-caption">Connect to hub</div>
 			</button>
 		</div>
 		<div id="error-container">
-			Hub disconnected, <a href="#" onclick="location.reload()">click</a> to reload.
+			<span id="error-message"></span><br>
+			<a href="#" onclick="location.reload()">Click</a> to reload.
 		</div>
-		<div id="webcam-container"></div>
-		<!--<div id="webcam-overlay">
+		<div id="webcam-container">
+			<div id="webcam-canvas-container"></div>
 			<img id="rotate" src="rotate.png" onclick="toggleWebcam()">
-		</div>-->
+		</div>
 		<div id="audio-container">
 			<div class="mic"><i class="fa fa-microphone" aria-hidden="true"></i></div>
 			<div class="mic mic-overlay"></div>

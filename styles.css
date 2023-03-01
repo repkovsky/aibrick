@@ -42,7 +42,7 @@ body {
     color: #FD8917;
 }
 
-.button-container {
+#button-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -79,10 +79,12 @@ body {
     color: steelblue;
  }
 
- #error-container {
+#error-container {
     display: none;
-    text-align: center;
-    color:darkred;
+    text-align: left;
+    font-size: 12px;
+    color:red;
+    padding: 10px;
 }
 
 #audio-container {
@@ -91,6 +93,7 @@ body {
 
 #webcam-container { 
     display: none;
+    position: relative; 
     border-radius: 10px;
     width: 300px;
     height: 300px;
@@ -107,16 +110,13 @@ body {
     height: 100%;
 }
 
-/*#webcam-overlay {
-    display: none;
-}
 #rotate {
-    position: relative; 
-    z-index: 100; 
-    top: 30px; 
-    left: 45px;
     visibility: hidden;
-}*/
+    position: absolute; 
+    z-index: 100; 
+    top: 10px; 
+    left: 10px;
+}
 
 #label-container {
     display: none;

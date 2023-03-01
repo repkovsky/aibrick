@@ -1,12 +1,12 @@
 
 function showAudioContainer(){
-    const audio_visualizer = document.getElementById("audio-container");
-    audio_visualizer.style.display = "block";
+    document.getElementById("audio-container").style.display = "block";
 }
 
 function showWebcamContainer(){
-	const webcam_overlay = document.getElementById("webcam-container");
-	webcam_overlay.style.display = "block";
+	document.getElementById("webcam-container").style.display = "block";
+	document.getElementById("rotate").style.visibility = "visible";
+	
 }
 
 const colors = ['#0072bd', '#d95319', '#edb120', '#7e2f8e', '#77ac30', '#4dbeee', '#a2142f'];
@@ -50,14 +50,19 @@ function setConnButtonState(state){
 	console.log("setConnButtonState", state)
 	switch (state){
 		case "connected":
-			document.getElementById("connect-button").style.display = "none";
+			document.getElementById("button-container").style.display = "none";
 			break;
 		case "disconnected":
-			document.getElementById("error-console").style.display = "block";
+			displayError('Hub disconnected.')
 			break;
 		case "setup":
 			document.getElementById("connect-button-caption").innerHTML = "Initializing...";
 			break;
 	}
 
+}
+
+function displayError(message){
+	document.getElementById("error-container").style.display = "block";
+	document.getElementById("error-message").innerHTML = message;
 }
