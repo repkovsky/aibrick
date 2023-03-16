@@ -1,9 +1,11 @@
 
 function showAudioContainer(){
+	setConnButtonState("processing");
     document.getElementById("audio-container").style.display = "block";
 }
 
 function showWebcamContainer(){
+	setConnButtonState("processing");
 	document.getElementById("webcam-container").style.display = "block";
 	document.getElementById("rotate").style.visibility = "visible";
 	
@@ -49,7 +51,7 @@ function updatePredictionBars(classLabels, scores){
 function setConnButtonState(state){
 	console.log("setConnButtonState", state)
 	switch (state){
-		case "connected":
+		case "processing":
 			document.getElementById("button-container").style.display = "none";
 			break;
 		case "disconnected":

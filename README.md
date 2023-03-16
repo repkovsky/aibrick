@@ -1,23 +1,26 @@
-# Lego AI
+# aiBrick
 
-Simple project for controlling Lego Bluetooth Hubs using Artificial Inteligence algorithms. 
-* Processing is performed in web browser using [TensorFlow.js](https://www.tensorflow.org/js) and [speech-commands.js](https://github.com/tensorflow/tfjs-models/tree/master/speech-commands) library for speech recognition. 
-* Communication with Lego Bluetooth Hubs uses [WebBluetoothAPI](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API) to establish Nordic UART connection (code based on [web-device-cli](https://github.com/makerdiary/web-device-cli).
-* Communication processing on Lego Hub was implemented in [Pybrick](https://pybricks.com/).
+aiBrick is browser application which enables using machine learning and artificial intelligence algorithms with Lego Mindstorms/Spike/Technic hubs programmed in [Pybrick](https://pybricks.com/). Processing of camera/microphone input is performed in web browser using [TensorFlow.js](https://www.tensorflow.org/js) and results are sent to hub over [WebBluetoothAPI](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API). Transmission on the hub's side is handled by `aibrick.py` module. Currently supported AI/ML models are:
+* [TeachableMachine Audio](https://teachablemachine.withgoogle.com/train/audio)
+* [TeachableMachine Image](https://teachablemachine.withgoogle.com/train/image)
 
-## Running
+## Running TeachableMachine models
 
-Code was tested on Mindstorms Robot Builder Hub and Tricky model.
+1. Teach your AI/ML model on [TeachableMachine](https://teachablemachine.withgoogle.com/). After gathering samples and training, click "Export Model" and in the tab "Tensorflow.js" choose option "Upload (shareable link)" and click "Upload my model". Below you will find the shareable link with you audio/image recognition model, which will be used to configure aiBrick.
 
-1. Install [Pybrick firmware](https://code.pybricks.com/).
-2. Paste code from [tricky_audio_control.py](https://raw.githubusercontent.com/repkovsky/lego-ai/main/tricky_audio_control.py) into Pybricks code editor, connect to hub and run code.
-3. Open https://repkovsky.github.io/lego-ai in browser (works in Chrome) and allow access to microphone. Displayed bars correspond to words which can be detected by default model `18w` of `speech-commands.js` library. The length of bar corresponds to estimated probability of each word. If the probability exceeds `0.75`, the word will be sent to hub over Bluetooth Nordic UART interface. The script in the Hub will send it back to browser to show that communation is working properly (you can observe it by pressing F12 and going to Console tab).
-4. Click 'Connect to hub', choose the proper Lego hub and click 'Pair'.
-5. In the console of Pybricks code you should see appearing words recognized by algorithm running in browser. If the word is 'left', 'right', 'go' or 'stop', the corresponding move should be executed.
+2. Install [Pybricks firmware](https://code.pybricks.com/) (v3.2.2 or higher) if you don't have it already on your hub. Download [aibrick.py](aibrick.py) module and upload it into [Pybricks code editor](https://code.pybricks.com/) using option "Import a file".
 
-## Custom AI model
+3. Create new file in Pybricks code editor (next to `aibrick.py`) and develop your code - see examples:
+* [aibrick_image.py](aibrick_image.py)
+* [aibrick_audio.py](aibrick.py)
 
-You can prepared and use your own speech recognition model with  https://teachablemachine.withgoogle.com/train/audio. After recording audio samples and training, click "Export Model" and in the tab "Tensorflow.js" choose option "Upload (shareable link)" and click "Upload my model". Below you will find the shareable link woth you speech recognition model. To use it with Lego hub, initialize  `BluetoothCommunication` class 
+4. Run program, depending on setup - for hub running program
+* with connection to Pybricks code editor: open the [aiBrick website](https://github.com/repkovksy/aibrick) at the same device in Chrome Browser, where the code editor is running. Start program in code editor first, then connect Bluetooth in aiBrick. Connecting two Bluetooth devices (e.g. PC with Pybricks code editor and smartphone with aiBrick) seems to be unstable.
+* without connection to Pybricks code editor: open the [aiBrick website](https://github.com/repkovksy/aibrick) on any device with Chrome Browser. Press and hold hub's button to run hub, and then press the button again to run the program. Next, connect Bluetooth in aiBrick.
 
- enables 
+## How does it work?
 
+* aiBrick JS application and Lego hub running Pybricks with `AiBrickteachableMachine` class communicate over Bluetooth using simple named messages.
+* aiBrick sends `setup` message to hub, hub responds with `setup` message with JSON-formatted configuration of AI/ML model to be loaded in aiBrick.
+* aiBrick loads requested model and sends `labels` message to hub with list of classes, which can be recognized by the AI model.
+* aiBrick starts to process audio/image. Depending on the configuration it will send `p` (_probability_) frame containing probabilities of each class (after each processing of input chunk) and/or `d` (_detected_) frame, notyfing about class whose probability just exceeded 0.5, so it is considered to be detected.

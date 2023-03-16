@@ -1,4 +1,4 @@
-let best_label = '';
+let best_label_idx = -1;
 let model_config = {};
 let model_connection = null;
 let frame_timer = 0;
@@ -57,9 +57,9 @@ function sendOnPrediction(classLabels, scores){
         } else {
             probabilities[i] = '';
         }
-        if (scores[i] > 0.5 && classLabels[i] != best_label){
+        if (scores[i] > 0.5 && i != best_label_idx){
             // label which score exceeds 0.5 and it is different from previous best label
-            best_label = classLabels[i];
+            best_label_idx = i;
             detection = true;
         }
     }
@@ -67,7 +67,7 @@ function sendOnPrediction(classLabels, scores){
         model_connection.sendMessage('p', probabilities.join(), false);
     }
     if (detection && model_config['detection']){
-        model_connection.sendMessage('d', best_label, true);
+        model_connection.sendMessage('d', best_label_idx.toString(), true);
     }
 }
 

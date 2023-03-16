@@ -10,6 +10,12 @@ class Connection {
 	}
 
 	sendMessage(command, value, priority=False) {
+		/**
+		 * Sends string-based command.
+		 * @param  {String}  command  Frame name, must not contain "·" nor '\n' characters
+		 * @param  {String}  value    Frame payload, must not contain "·" nor '\n' characters
+		 * @param  {Boolean} priority Queues frame in the TX buffer, even if it is not empty. Otherwise frame is ignored.
+		 */
 		console.log("sendMessage");
 		this.tx_buffer.pushString(command + SEP + value + '\n', priority);
 	}
@@ -41,8 +47,6 @@ class Connection {
 				command = '';
 				message = received;
 			}
-			// console.log("command:" + command);
-			// console.log("value:" + message);
 			this.rx_buffer = this.rx_buffer.slice(this.rx_buffer.indexOf('\n')+1);
 			if (command == 'setup'){
 				console.log(JSON.parse(message))
@@ -55,7 +59,6 @@ class Connection {
 	}
 
 	onDisconnected(){
-		// state = State.BLE_disconnected;
 		setConnButtonState("disconnected");
 	}
 }
