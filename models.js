@@ -138,7 +138,7 @@ async function webcamInit(new_flip){
     const webcam_container = document.getElementById("webcam-canvas-container");
     webcam_container.innerHTML = "Setting up camera...";
     webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
-    await webcam.setup(); // request access to the webcam
+    await webcam.setup({ facingMode: "environment" }); // request access to the webcam
     await webcam.play();
     frame_timer = performance.now();
     window.requestAnimationFrame(imageLoop);

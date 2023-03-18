@@ -1,4 +1,4 @@
-const SEP = "·";
+const SEP = String.fromCharCode(183);
 
 class Connection {
     constructor() {
@@ -51,7 +51,6 @@ class Connection {
 			if (command == 'setup'){
 				console.log(JSON.parse(message))
 				modelInit(this, JSON.parse(message));
-				setConnButtonState("connected");
 			} else {
 				console.log(received)
 			}

@@ -1,7 +1,7 @@
 from usys import stdin
 from uselect import poll
 
-SEP = '·'
+SEP = chr(183)
 EOF = '\n'
 
 class AiBrick:

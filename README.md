@@ -13,8 +13,8 @@ aiBrick is browser application which enables using machine learning and artifici
 3. Create new file in Pybricks code editor (next to `aibrick.py`) and develop your code (see example of implementation in [aibrick_brick_classifier.py](aibrick_brick_classifier.py))
 
 4. Run program, depending on setup - for hub running program
-* with connection to Pybricks code editor: open the [aiBrick website](https://github.com/repkovsky/aibrick) at the same device in Chrome Browser, where the code editor is running. Start program in code editor first, then connect Bluetooth in aiBrick. Connecting two Bluetooth devices (e.g. PC with Pybricks code editor and smartphone with aiBrick) seems to be unstable.
-* without connection to Pybricks code editor: open the [aiBrick website](https://github.com/repkovsky/aibrick) on any device with Chrome Browser. Press and hold hub's button to run hub, and then press the button again to run the program. Next, connect Bluetooth in aiBrick.
+* with connection to Pybricks code editor: open the [aiBrick website](https://repkovsky.github.io/aibrick) at the same device in Chrome Browser, where the code editor is running. Start program in code editor first, then connect Bluetooth in aiBrick. Connecting two Bluetooth devices (e.g. PC with Pybricks code editor and smartphone with aiBrick) seems to be unstable.
+* without connection to Pybricks code editor: open the [aiBrick website](https://repkovsky.github.io/aibrick) on any device with Chrome Browser. Press and hold hub's button to run hub, and then press the button again to run the program. Next, connect Bluetooth in aiBrick.
 
 ## How does it work?
 
