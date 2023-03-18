@@ -3,13 +3,19 @@ from pybricks.parameters import Color, Icon
 from pybricks.geometry import Matrix
 from aibrick import AiBrickTeachableMachine
 
-# Initialize the hub.
-hub = PrimeHub()
+"""
+This is Pybricks code for classification of bricks using aiBrick, 
+TeachableMachine AI/ML model and camera in PC/Laptop/Smartphone. 
+6 classes are recognized:
+* Technic Beam 1 x 3 Thick
+* Technic Beam 1 x 5 Thick
+* Technic Beam 2 x 4 L-Shape Thick
+* Technic Beam 3 x 5 L-Shape Thick
+* Technic Beam 3 x 3 T-Shape Thick
+* No brick
+"""
 
-# Initialize the aiBrick
-MODEL = 'https://teachablemachine.withgoogle.com/models/ztCFxnUmJ/'
-aibrick = AiBrickTeachableMachine(MODEL, detection=True, probability=True)
-
+# define images corresponding to detection of bricks
 BRICK_ICONS = {
     "3": Matrix([
         [0, 0, 0, 0, 0],
@@ -48,9 +54,19 @@ BRICK_ICONS = {
         ])
 }
 
+# Initialize the hub.
+hub = PrimeHub()
+
+# Initialize the aiBrick
+MODEL = 'https://teachablemachine.withgoogle.com/models/ztCFxnUmJ/'
+aibrick = AiBrickTeachableMachine(MODEL,            # provide link to TeachableMachine model
+                                  detection=True,   # enable notification on detection
+                                  probability=True) # enable updates about each class' probability
+
+# continuous listening to Bluetooth connection and processing received frames
 while True:
     received = aibrick.receive()
-    # handle all types of received commands
+    # handle all types of received frames
     if received == 'setup':
         # aiBrick app requested for setup
         hub.light.on(Color.ORANGE)
@@ -63,7 +79,7 @@ while True:
             hub.display.icon(BRICK_ICONS[aibrick.detection]*100)
         else:
             hub.display.icon(Icon.EMPTY)
-        # display probabilities as brightness of last row
+        # display probabilities of each class as brightness of last row ('no brick' class probability is not included)
         col = 0
         for class_label, class_probability in aibrick.probability.items():
             if class_label in BRICK_ICONS:
