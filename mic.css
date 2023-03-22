@@ -1,0 +1,57 @@
+:root {
+    --mic-color: #425066;
+    --mic-size: 35px;
+}
+  
+#audio-container {
+    width: 100%;
+    height: var(--mic-size);
+    position: relative;
+}
+
+.fa {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+  
+.mic {
+    color: #fff;
+    text-align: center;
+    font-size: 18px;
+    white-space: nowrap;
+    border: none;
+    padding: 0;
+    border-radius: 100%;
+    width: var(--mic-size);
+    height: var(--mic-size);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--mic-color);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.mic-overlay {
+    z-index: 9;
+    width: var(--mic-size);
+    height: var(--mic-size);
+    border: 2px solid var(--mic-color);
+    border-radius: 100%;
+    top: -2px;
+    background: transparent;
+    animation: pulsate infinite 1.5s;
+}
+  
+@keyframes pulsate {
+    0% {
+    transform: scale(0.9, 0.9);
+    opacity: 1;
+    }
+    100% {
+    transform: scale(1.2, 1.2);
+    opacity: 0;
+    }
+}
