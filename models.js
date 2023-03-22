@@ -130,7 +130,7 @@ async function imageInit() {
     let model_labels = model.getClassLabels();
 	sendLabelsToHub(model_labels);
     createPredictionBars(model_labels);
-    webcamInit(true);
+    webcamInit(!isMobile());
 }
 
 async function webcamInit(new_flip){
@@ -138,7 +138,11 @@ async function webcamInit(new_flip){
     const webcam_container = document.getElementById("webcam-canvas-container");
     webcam_container.innerHTML = "Setting up camera...";
     webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
-    await webcam.setup({ facingMode: "environment" }); // request access to the webcam
+    if (flip) {
+        await webcam.setup();
+    } else {
+        await webcam.setup({ facingMode: "environment" });
+    }
     await webcam.play();
     frame_timer = performance.now();
     window.requestAnimationFrame(imageLoop);

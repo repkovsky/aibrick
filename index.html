@@ -11,9 +11,9 @@
 	<link rel="stylesheet" href="mic.css">
 	<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
 	<title>aiBrick</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   </head>
-  <body>
+  <body onload="if (!isChrome()) {setConnButtonState('unsupported_browser')}">
 	<div class="app">
 		<div class="title-container">
 			<img src="ai-brick-ic.png" id="app-logo">
@@ -26,7 +26,7 @@
 		</div>
 		<div id="error-container">
 			<span id="error-message"></span><br>
-			<a href="#" onclick="location.reload()">Click</a> to reload.
+			<a href="#" onclick="location.reload()">Click to reload.</a>
 		</div>
 		<div id="webcam-container">
 			<div id="webcam-canvas-container"></div>

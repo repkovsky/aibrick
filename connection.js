@@ -28,6 +28,9 @@ class Connection {
 		console.log("onConnected");
 		setConnButtonState("setup");
 		this.sendMessage('setup', '?', true);
+		this.setup_request = setInterval(function() {
+			this.sendMessage('setup', '?', true);
+		}.bind(this), 1000);
 	}
 
 	onMsgReceived(event){
@@ -49,6 +52,7 @@ class Connection {
 			}
 			this.rx_buffer = this.rx_buffer.slice(this.rx_buffer.indexOf('\n')+1);
 			if (command == 'setup'){
+				clearInterval(this.setup_request);
 				console.log(JSON.parse(message))
 				modelInit(this, JSON.parse(message));
 			} else {
