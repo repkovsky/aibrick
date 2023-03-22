@@ -1,6 +1,6 @@
-# aiBrick
+# ![](ai-brick-ic.png) aiBrick
 
-aiBrick is browser application which enables using machine learning and artificial intelligence algorithms with Lego Mindstorms/Spike/Technic hubs programmed in [Pybrick](https://pybricks.com/). Processing of camera/microphone input is performed in web browser using [TensorFlow.js](https://www.tensorflow.org/js) and results are sent to hub over [WebBluetoothAPI](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API). Transmission on the hub's side is handled by `aibrick.py` module. Currently supported AI/ML models are:
+aiBrick is [browser application](https://repkovsky.github.io/aibrick) which enables using machine learning and artificial intelligence algorithms with Lego Mindstorms/Spike/Technic hubs programmed in [Pybricks](https://pybricks.com/). Processing of camera/microphone input is performed in web browser using [TensorFlow.js](https://www.tensorflow.org/js) and results are sent to hub over [WebBluetoothAPI](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API). Transmission on the hub's side is handled by `aibrick.py` module. Currently supported AI/ML models are:
 * [TeachableMachine Audio](https://teachablemachine.withgoogle.com/train/audio)
 * [TeachableMachine Image](https://teachablemachine.withgoogle.com/train/image)
 
@@ -28,6 +28,7 @@ aiBrick is browser application which enables using machine learning and artifici
 
 ## How does it work?
 
+Currently supported AI/ML models are based on neural networks - you can find [nice introduction on 3Blue1Brown])https://www.youtube.com/watch?v=aircAruvnKk) YouTube channel. Some nice answers can be also found in [TeachableMachine FAQ](https://teachablemachine.withgoogle.com/faq). Here is short description how aiBrick works:
 * aiBrick web application and Lego hub running Pybricks with `AiBrickteachableMachine` class communicate over Bluetooth using simple named messages.
 * aiBrick web application sends `setup` messages to hub until hub responds with `setup` message with JSON-formatted configuration of AI/ML model to be loaded in aiBrick.
 * aiBrick web application loads requested model downloading it from the provided address and sends `labels` message to hub with list of classes, which can be recognized by the AI model.
