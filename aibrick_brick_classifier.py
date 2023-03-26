@@ -74,6 +74,7 @@ while True:
         # the setup of aiBrick app is finished
         hub.light.on(Color.WHITE)
     elif received in ['detection', 'probability']:
+        print("'%s' brick detected!" % aibrick.detection)
         # display detected brick shape
         if aibrick.detection in BRICK_ICONS:
             hub.display.icon(BRICK_ICONS[aibrick.detection]*100)

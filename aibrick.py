@@ -1,5 +1,6 @@
 from usys import stdin
 from uselect import poll
+import ujson
 
 SEP = chr(183)
 EOF = '\n'
@@ -72,7 +73,7 @@ class AiBrickTeachableMachine(AiBrick):
         or assign `labels`, `detection` or `probability` properties.
         """
         if cmd == 'setup':
-            self._send('setup', json_dumps(self.config))
+            self._send('setup', ujson.dumps(self.config))
         elif cmd == 'labels':
             self.labels = message.split('"')[1::2]
         if cmd == 'd' and self.config['detection']:
@@ -84,26 +85,3 @@ class AiBrickTeachableMachine(AiBrick):
         else:
             # for debug purposes
             print("cmd", cmd, len(cmd), "message", message)
-
-def json_dumps(dictionary: dict) -> str:
-    """Serializes dict to a JSON formatted str."""
-    def json_format(value):
-        if type(value) is dict:
-            return '{%s}' % ','.join(['"%s":%s' % (str(key), json_format(val))
-                                      for key, val in value.items()])
-        elif type(value) in [list, tuple]:
-            return '[%s]' % ','.join([json_format(elem) for elem in value])
-        elif type(value) in [int, float]:
-            return str(value)
-        elif type(value) is str:
-            for char, escaped in [('\\', '\\'), ('"', '"'), ('\n', 'n'), 
-                                  ('\r', 'r'), ('\t', 't')]:
-                value = value.replace(char, '\\' + escaped)
-            return '"%s"' % value
-        elif type(value) is bool:
-            return str(value).lower()
-        elif value is None:
-            return 'null'
-    
-    assert type(dictionary) is dict
-    return json_format(dictionary)
