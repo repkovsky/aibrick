@@ -8,7 +8,7 @@ body {
     color: var(--text-color);
     background-color: #e8eaed;
     font-weight: 600;
-    margin: 2px;
+    margin: 2px 0px 0px 0px; 
 }
 
 .app {
