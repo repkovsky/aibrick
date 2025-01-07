@@ -3,12 +3,12 @@
 	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands"></script>
 	<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
-	<script src="ble.js"></script>
-	<script src="models.js"></script>
-	<script src="connection.js"></script>
-	<script src="interface.js"></script>
-	<link rel="stylesheet" href="styles.css">
-	<link rel="stylesheet" href="mic.css">
+	<script src="js/ble.js"></script>
+	<script src="js/models.js"></script>
+	<script src="js/connection.js"></script>
+	<script src="js/interface.js"></script>
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/mic.css">
 	<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
 	<title>aiBrick</title>
 	<meta name="viewport" content="width=device-width, initial-scale=0.95, user-scalable=no">
@@ -16,7 +16,7 @@
   <body onload="if (!isChrome()) {setConnButtonState('unsupported_browser')}">
 	<div class="app">
 		<div class="title-container">
-			<img src="ai-brick-ic.png" id="app-logo">
+			<img src="img/ai-brick-ic.png" id="app-logo">
 			<span id="app-name"><span id="app-name-ai">ai</span>Brick</span>
 		</div>
 		<div id="button-container">
@@ -30,7 +30,7 @@
 		</div>
 		<div id="webcam-container">
 			<div id="webcam-canvas-container"></div>
-			<img id="rotate" src="rotate.png" onclick="toggleWebcam()">
+			<img id="rotate" src="img/rotate.png" onclick="toggleWebcam()">
 		</div>
 		<div id="audio-container">
 			<div class="mic"><i class="fa fa-microphone" aria-hidden="true"></i></div>
@@ -38,7 +38,7 @@
 		</div>
 		<div id="label-container"></div>
 		<div class="footnote">
-			<a href="https://repkovsky.github.io/ai-brick">About the project</a>
+			<a href="https://github.com/repkovsky/aibrick">About the project</a>
 		</div>
 	</div>
   </body>

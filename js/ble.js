@@ -2,16 +2,15 @@
 
 /** Pybricks service UUID. */
 const pybricksServiceUUID = 'c5f50001-8280-46da-89f4-6d8051e4aeef';
+
+/** Pybricks command event characteristic UUID. */
+const pybricksCommandEventCharUUID = 'c5f50002-8280-46da-89f4-6d8051e4aeef';
+
 /** Device Information service UUID. */
 const deviceInformationServiceUUID = 0x180a;
-/** nRF UART Service UUID. */
-const nordicUartServiceUUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-/** nRF UART RX Characteristic UUID. Supports Write or Write without response. */
-const nordicUartRxCharUUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
-/** nRF UART TX Characteristic UUID. Supports Notifications. */
-const nordicUartTxCharUUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 
 const MTU = 20;
+const WRITE_STDIN = 0x06;
 
 var bleDevice;
 var bleServer;
@@ -29,9 +28,9 @@ function connect(connection) {
     navigator.bluetooth.requestDevice({
         filters: [{ services: [pybricksServiceUUID] }],
         optionalServices: [
+            pybricksCommandEventCharUUID,
             pybricksServiceUUID,
             deviceInformationServiceUUID,
-            nordicUartServiceUUID,
         ],
     })
     .then(device => {
@@ -43,14 +42,14 @@ function connect(connection) {
     })
     .then(server => {
         console.log('Locate NUS service');
-        return server.getPrimaryService(nordicUartServiceUUID);
+        return server.getPrimaryService(pybricksServiceUUID);
     }).then(service => {
         nusService = service;
         console.log('Found NUS service: ' + service.uuid);
     })
     .then(() => {
         console.log('Locate RX characteristic');
-        return nusService.getCharacteristic(nordicUartRxCharUUID);
+        return nusService.getCharacteristic(pybricksCommandEventCharUUID);
     })
     .then(characteristic => {
         rxCharacteristic = characteristic;
@@ -59,7 +58,7 @@ function connect(connection) {
     })
     .then(() => {
         console.log('Locate TX characteristic');
-        return nusService.getCharacteristic(nordicUartTxCharUUID);
+        return nusService.getCharacteristic(pybricksCommandEventCharUUID);
     })
     .then(characteristic => {
         txCharacteristic = characteristic;
@@ -123,10 +122,10 @@ class BufferedNUS {
 
     sendBuffer() {
         this.busy = true;
-        let chunk = new Uint8Array(this.buffer.slice(0, MTU));
-        this.buffer.splice(0, MTU);
+        let chunk = new Uint8Array([WRITE_STDIN, ...this.buffer.slice(0, MTU-1)]);
+        this.buffer.splice(0, MTU-1);
         // console.log("this.buffer.slice(0, MTU)" + this.buffer.slice(0, MTU));
-        // console.log("chunk" + chunk);
+//        console.log("chunk " + chunk);
         let self = this;
         this.rxCharacteristic.writeValue(chunk)
             .catch(async () => {

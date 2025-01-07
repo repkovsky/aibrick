@@ -9,26 +9,23 @@ aiBrick is [browser application](https://repkovsky.github.io/aibrick) which enab
 ### Creating AI/ML model and development of the Python program
 
 1. Teach your AI/ML model on [TeachableMachine](https://teachablemachine.withgoogle.com/). After gathering samples and training, click "Export Model" and in the tab "Tensorflow.js" choose option "Upload (shareable link)" and click "Upload my model". Below you will find the shareable link with you audio/image recognition model, which will be used to configure aiBrick.
-
 2. Install [Pybricks firmware](https://code.pybricks.com/) (v3.2.2 or higher) if you don't have it already on your hub. Download [aibrick.py](aibrick.py) module and upload it into [Pybricks code editor](https://code.pybricks.com/) using option "Import a file".
-
 3. Create new file in Pybricks code editor (next to `aibrick.py`) and develop your code (see example of implementation in [aibrick_brick_classifier.py](aibrick_brick_classifier.py)).
-
 4. Turn on the hub and connect Bluetooth in [Pybricks code editor](https://code.pybricks.com/). Run the program (it is going to be present in hub also when the Pybricks code editor is disconnected).
-
 5. Open the [aiBrick website](https://repkovsky.github.io/aibrick) at the same device in Chrome Browser, where the code editor is running. Press the Bluetooth button in aiBrick, find hub on the list of available devices and connect.
 
 ### Running aiBrick with programmed hub
 
 1. Turn on the hub.
-
 2. Open the [aiBrick website](https://repkovsky.github.io/aibrick) in Chrome Browser on smartphone, tablet or PC. Press the Bluetooth button in aiBrick, find hub on the list of available devices and connect.
-
 3. Push the button on hub to start the program.
 
 ## How does it work?
 
-Currently supported AI/ML models are based on neural networks - you can find [nice introduction on 3Blue1Brown])https://www.youtube.com/watch?v=aircAruvnKk) YouTube channel. Some nice answers can be also found in [TeachableMachine FAQ](https://teachablemachine.withgoogle.com/faq). Here is short description how aiBrick works:
+Currently supported AI/ML models are based on neural networks - you can find [nice introduction on 3Blue1Brown](https://www.youtube.com/watch?v=aircAruvnKk) 
+YouTube channel. Some useful introductory answers can be also found in [TeachableMachine FAQ](https://teachablemachine.withgoogle.com/faq). 
+
+Here is a short description of how aiBrick works:
 * aiBrick web application and Lego hub running Pybricks with `AiBrickteachableMachine` class communicate over Bluetooth using simple named messages.
 * aiBrick web application sends `setup` messages to hub until hub responds with `setup` message with JSON-formatted configuration of AI/ML model to be loaded in aiBrick.
 * aiBrick web application loads requested model downloading it from the provided address and sends `labels` message to hub with list of classes, which can be recognized by the AI model.

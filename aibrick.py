@@ -5,6 +5,7 @@ import ujson
 SEP = chr(183)
 EOF = '\n'
 
+
 class AiBrick:
     """Base class for AiBrick communication."""
     frames = {}
@@ -24,13 +25,13 @@ class AiBrick:
         print(cmd, SEP, message, '\n', sep='')
 
     def _process(self, cmd: str, message: str):
-        """This method should be implemented in the drived class."""
+        """This method should be implemented in the derived class."""
         ...
     
     def receive(self):
         """
         Listens to Blueooth transmission and pushes the received bytes into 
-        buffer until and of frame (EOF) byte is received. Then calls _process()
+        buffer until end of frame (EOF) byte is received. Then calls _process()
         to interpret contents of the frame and returns frame's name (command).
         If EOF was not yet received, None is returned.
         """
