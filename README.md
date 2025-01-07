@@ -1,4 +1,4 @@
-# ![](ai-brick-ic.png) aiBrick
+# ![](img/ai-brick-ic.png) aiBrick
 
 aiBrick is [browser application](https://repkovsky.github.io/aibrick) which enables using machine learning and artificial intelligence algorithms with Lego Mindstorms/Spike/Technic hubs programmed in [Pybricks](https://pybricks.com/). Processing of camera/microphone input is performed in web browser using [TensorFlow.js](https://www.tensorflow.org/js) and results are sent to hub over [WebBluetoothAPI](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API). Transmission on the hub's side is handled by `aibrick.py` module. Currently supported AI/ML models are:
 * [TeachableMachine Audio](https://teachablemachine.withgoogle.com/train/audio)
