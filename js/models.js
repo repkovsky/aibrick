@@ -3,6 +3,7 @@ let model_config = {};
 let model_connection = null;
 let frame_timer = 0;
 let frame_period = 200;
+let pose_cache = null;
 
 async function modelType(url){
     if (url){
@@ -37,6 +38,9 @@ async function modelInit(connection, config) {
                 break;
             case "image":
                 imageInit();
+                break;
+            case "pose":
+                poseInit();
                 break;
             default:
                 displayError('Unsupported Teachable Machine configuration ("' + model_type + '").');
@@ -114,7 +118,7 @@ async function audioInit() {
 }
 
 
-let model, webcam, flip;
+let model, webcam, flip, model_type, ctx;
 
 // Load the image model and setup the webcam
 async function imageInit() {
@@ -126,6 +130,25 @@ async function imageInit() {
     // or files from your local hard drive
     // Note: the pose library adds "tmImage" object to your window (window.tmImage)
     model = await tmImage.load(modelURL, metadataURL);
+    model_type = "image";
+    showWebcamContainer();
+    let model_labels = model.getClassLabels();
+	sendLabelsToHub(model_labels);
+    createPredictionBars(model_labels);
+    webcamInit(!isMobile());
+}
+
+// Load the image model and setup the webcam
+async function poseInit() {
+    const modelURL = model_config['model'] + "model.json";
+    const metadataURL = model_config['model'] + "metadata.json";
+
+    // load the model and metadata
+    // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+    // or files from your local hard drive
+    // Note: the pose library adds a tmPose object to your window (window.tmPose)
+    model = await tmPose.load(modelURL, metadataURL);
+    model_type = "pose";
     showWebcamContainer();
     let model_labels = model.getClassLabels();
 	sendLabelsToHub(model_labels);
@@ -134,10 +157,15 @@ async function imageInit() {
 }
 
 async function webcamInit(new_flip){
+    const size = 300;
     flip = new_flip;
     const webcam_container = document.getElementById("webcam-canvas-container");
     webcam_container.innerHTML = "Setting up camera...";
-    webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
+    if (model_type == "pose"){
+        webcam = new tmPose.Webcam(size, size, flip); // width, height, flip
+    } else if (model_type == "image"){
+        webcam = new tmImage.Webcam(size, size, flip); // width, height, flip
+    }
     if (flip) {
         await webcam.setup();
     } else {
@@ -148,18 +176,45 @@ async function webcamInit(new_flip){
     window.requestAnimationFrame(imageLoop);
 
     // append elements to the DOM
-    webcam.canvas.id = "webcam-canvas";
     webcam_container.innerHTML = "";
-    webcam_container.appendChild(webcam.canvas);
+    const canvas = document.createElement("canvas");
+    canvas.id = "webcam-canvas";
+    canvas.width = webcam.canvas.width; canvas.height = webcam.canvas.height;
+    webcam_container.appendChild(canvas);
+    ctx = canvas.getContext("2d");
+
     rotate_button = document.getElementById("rotate")
     rotate_button.style.visibility = "visible";
+}
+
+function drawWebcam() {
+    const minPartConfidence = 0.25;
+    if (webcam.canvas) {
+        ctx.drawImage(webcam.canvas, 0, 0);
+        // draw the keypoints and skeleton
+        if (pose_cache) {
+            tmPose.drawKeypoints(pose_cache.keypoints, minPartConfidence, ctx);
+            tmPose.drawSkeleton(pose_cache.keypoints, minPartConfidence, ctx);
+        }
+    }
 }
 
 async function imageLoop() {
     webcam.update(); // update the webcam frame
     if (performance.now() - frame_timer > frame_period){
         frame_timer = performance.now();
-        const prediction = await model.predict(webcam.canvas);
+        let prediction;
+        if (model_type == "pose"){
+            // Prediction #1: run input through posenet
+            // estimatePose can take in an image, video or canvas html element
+            const { pose, posenetOutput } = await model.estimatePose(webcam.canvas);
+            // Prediction 2: run input through teachable machine classification model
+            prediction = await model.predict(posenetOutput);
+            pose_cache = pose;
+            drawWebcam();
+        } else if (model_type == "image"){
+            prediction = await model.predict(webcam.canvas);
+        }
         let model_scores = Array(model.getTotalClasses());
         let model_labels = model.getClassLabels();
         for (let i = 0; i < model.getTotalClasses(); i++){
@@ -167,6 +222,8 @@ async function imageLoop() {
         }
         updatePredictionBars(model_labels, model_scores);
         sendOnPrediction(model_labels, model_scores);
+    } else {
+        drawWebcam();
     }
     window.requestAnimationFrame(imageLoop);
 }

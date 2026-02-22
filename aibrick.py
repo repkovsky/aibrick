@@ -1,8 +1,8 @@
-from usys import stdin
+from usys import stdin, stdout
 from uselect import poll
 import ujson
 
-SEP = chr(183)
+SEP = ' '
 EOF = '\n'
 
 
@@ -18,11 +18,11 @@ class AiBrick:
         
     def _flush(self):
         while self.nuart.poll(0):
-            stdin.read(1)
+            stdin.buffer.read(1)
 
     def _send(self, cmd: str, message: str):
         """Sends the frame with given command's name and message."""
-        print(cmd, SEP, message, '\n', sep='')
+        stdout.buffer.write(cmd + SEP + message + '\n')
 
     def _process(self, cmd: str, message: str):
         """This method should be implemented in the derived class."""
@@ -36,7 +36,7 @@ class AiBrick:
         If EOF was not yet received, None is returned.
         """
         while self.nuart.poll(0):
-            char = stdin.read(1)  
+            char = chr(stdin.buffer.read(1)[0])
             if char == EOF:
                 received, self.buffer = self.buffer, ''
                 if SEP in received:

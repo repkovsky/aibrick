@@ -1,4 +1,4 @@
-const SEP = String.fromCharCode(183);
+const SEP = ' ';
 const EOF = '\n';
 const WRITE_STDOUT = 0x01;
 
@@ -14,16 +14,12 @@ class Connection {
 	sendMessage(command, value, priority=False) {
 		/**
 		 * Sends string-based command.
-		 * @param  {String}  command  Frame name, must not contain "·" (SEP) nor '\n' (EOF) characters
-		 * @param  {String}  value    Frame payload, must not contain "·" (SEP) nor '\n' (EOF) characters
+		 * @param  {String}  command  Frame name, must not contain SEP nor EOF characters
+		 * @param  {String}  value    Frame payload, must not contain EOF character
 		 * @param  {Boolean} priority Queues frame in the TX buffer, even if it is not empty. Otherwise frame is ignored.
 		 */
 		console.log("sendMessage");
 		this.tx_buffer.pushString(command + SEP + value + EOF, priority);
-	}
-
-	sendText(text) {
-		this.tx_buffer.pushString(text + EOF, true);
 	}
 
 	onConnected(){
@@ -51,9 +47,9 @@ class Connection {
 			let command, message;
 			let received = this.rx_buffer.slice(0, this.rx_buffer.indexOf(EOF));
 			if (received.includes(SEP)) {
-				const parts = received.split(SEP, 2);
-				command = parts[0];
-				message = parts[1];
+				const idx = received.indexOf(SEP);
+				command = received.slice(0, idx);
+				message = received.slice(idx + 1);
 			} else {
 				command = '';
 				message = received;
